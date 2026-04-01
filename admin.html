@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gran Retto | Panel de Administración</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Montserrat:wght@300;400;600;700;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --rojo: #e01020;
+      --rojo-dark: #a00010;
+      --negro: #050505;
+      --carbon: #0d0d0d;
+      --surface: #141414;
+      --surface2: #1c1c1c;
+      --glass: rgba(255, 255, 255, .04);
+      --glass-border: rgba(255, 255, 255, .08);
+      --blanco: #fff;
+      --gris: #aaa;
+      --dorado: #f5c518;
+      --accent: #2e5bff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--negro);
+      color: var(--blanco);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Layout */
+    .admin-layout {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 70px);
+    }
+
+    aside.sidebar {
+      width: 260px;
+      background: var(--surface);
+      border-right: 1px solid var(--glass-border);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-nav {
+      list-style: none;
+    }
+
+    .tab-btn {
+      width: 100%;
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: none;
+      border: none;
+      color: var(--gris);
+      font-size: .8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all .3s;
+      border-left: 3px solid transparent;
+    }
+
+    .tab-btn i { font-size: 1.1rem; width: 20px; }
+    .tab-btn:hover { background: rgba(255,255,255,.05); color: var(--blanco); }
+    .tab-btn.active {
+      background: rgba(224, 16, 32, .1);
+      color: var(--rojo);
+      border-left-color: var(--rojo);
+    }
+
+    main.content {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+      background: radial-gradient(circle at top right, rgba(224, 16, 32, 0.05), transparent);
+    }
+
+    /* Dashboard Metrics */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .metric-card {
+      background: var(--surface);
+      padding: 25px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::after {
+      content: ""; position: absolute; top:0; left:0; width:100%; height:4px; background: var(--rojo);
+    }
+
+    .metric-card.gold::after { background: var(--dorado); }
+    .metric-card.blue::after { background: var(--accent); }
+
+    .metric-val { font-family: 'Oswald'; font-size: 2rem; margin: 10px 0; }
+    .metric-label { font-size: .7rem; color: var(--gris); text-transform: uppercase; font-weight: 700; }
+
+    /* Forms and Lists */
+    .admin-card {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .section-title { font-family: 'Oswald'; font-size: 2rem; margin-bottom: 30px; text-transform: uppercase; font-style: italic; }
+
+    .tab-pane { display: none; animation: fadeIn .4s; }
+    .tab-pane.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Rest of previous styles ... */
+    .logo { font-family: 'Oswald'; font-size: 1.5rem; font-weight: 700; font-style: italic; text-transform: uppercase; }
+    .logo span { color: var(--rojo); }
+    header { height: 70px; background: rgba(5,5,5,.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); padding: 0 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+    nav a { color: white; text-decoration: none; font-size: .7rem; font-weight: 700; text-transform: uppercase; border: 1px solid var(--glass-border); padding: 8px 15px; border-radius: 4px; transition: .3s; }
+    nav a:hover { background: var(--rojo); border-color: var(--rojo); }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: .65rem; color: var(--gris); text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+    input, select, textarea { width: 100%; background: var(--surface); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 6px; outline: none; }
+    input:focus { border-color: var(--rojo); }
+
+    .btn-submit { background: var(--rojo); color: white; border: none; padding: 14px; font-weight: 700; text-transform: uppercase; cursor: pointer; border-radius: 6px; transition: .3s; }
+    .btn-submit:hover { background: white; color: black; }
+
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid var(--glass-border); }
+    .item-info h4 { font-size: .9rem; }
+    .btn-icon { background: none; border: 1px solid var(--glass-border); color: var(--gris); width: 35px; height: 35px; border-radius: 6px; cursor: pointer; transition: .3s; }
+    .btn-icon:hover { color: var(--rojo); border-color: var(--rojo); }
+
+    #auth-overlay { position: fixed; inset: 0; background: var(--negro); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+    .auth-box { background: var(--surface); padding: 40px; border-radius: 12px; border-top: 4px solid var(--rojo); width: 100%; max-width: 360px; text-align: center; }
+
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,.85); backdrop-filter: blur(5px); z-index: 3000; display: none; align-items: center; justify-content: center; }
+    .modal-box { background: var(--surface); border-radius: 12px; padding: 40px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+  </style>
+</head>
+
+<body>
+
+  <div id="auth-overlay">
+    <div class="auth-box">
+      <h2 style="font-family:'Oswald';margin-bottom:20px;">Acceso Admin</h2>
+      <div class="form-group">
+        <input type="text" id="admin-user" placeholder="Usuario (En blanco para admin)">
+      </div>
+      <div class="form-group">
+        <input type="password" id="admin-pass" placeholder="Contraseña">
+      </div>
+      <button class="btn-submit" onclick="checkAuth()">Ingresar</button>
+      <p style="margin-top:20px;font-size:.6rem;color:var(--gris);">Contraseña por defecto: 1234</p>
+    </div>
+  </div>
+
+  <header>
+    <div class="logo"><img src="LOGO GRAN RETTO@2x.png" alt="Logo" style="height:35px; margin-right:10px;"> ADMIN</div>
+    <nav style="display:flex; align-items:center; gap:15px;">
+      <span id="user-display" style="font-size:.7rem; color:var(--gris)"></span>
+      <a href="index.html" title="Volver al Inicio"><i class="fa-solid fa-house"></i></a>
+      <a href="#" onclick="logout()" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i></a>
+    </nav>
+  </header>
+
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <ul class="tab-nav">
+        <li>
+          <button class="tab-btn active" onclick="switchTab('dashboard')">
+            <i class="fa-solid fa-chart-line"></i> Dashboard
+          </button>
+        </li>
+        <li>
+          <button class="tab-btn" onclick="switchTab('events')">
+            <i class="fa-solid fa-calendar-days"></i> Eventos
+          </button>
+        </li>
+        <li id="nav-products">
+          <button class="tab-btn" onclick="switchTab('products')">
+            <i class="fa-solid fa-shirt"></i> Tienda
+          </button>
+        </li>
+        <li id="nav-users">
+          <button class="tab-btn" onclick="switchTab('users')">
+            <i class="fa-solid fa-users"></i> Usuarios
+          </button>
+        </li>
+      </ul>
+      
+      <div style="margin-top:auto; padding:20px; border-top:1px solid var(--glass-border)">
+        <p style="font-size:.6rem; color:var(--gris); text-align:center">GranRetto v3.0<br>Panel de Gestión</p>
+      </div>
+    </aside>
+
+    <main class="content">
+      <!-- ── TAB DASHBOARD ── -->
+      <div id="tab-dashboard" class="tab-pane active">
+        <h2 class="section-title">Resumen General</h2>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Ventas Totales</div>
+            <div class="metric-val" id="stat-orders">0</div>
+          </div>
+          <div class="metric-card gold">
+            <div class="metric-label">Ingresos Brutos</div>
+            <div class="metric-val" id="stat-revenue">$0</div>
+          </div>
+          <div class="metric-card blue">
+            <div class="metric-label">Inscritos</div>
+            <div class="metric-val" id="stat-competitors">0</div>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i> Transacciones Recientes (ID 12 Dígitos)</h3>
+          <div id="dashboard-recent-orders" style="max-height:300px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:8px; margin-top:20px;">
+             <!-- Orders table -->
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3><i class="fa-solid fa-ranking-star"></i> Rendimiento por Evento</h3>
+          <div id="dashboard-event-metrics">
+            <!-- Metrics per event injected here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB EVENTOS ── -->
+      <div id="tab-events" class="tab-pane">
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:30px;">
+          <div>
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-calendar-plus"></i> Gestionar Evento</h3>
+              <form id="event-form" onsubmit="saveEvent(event)">
+                <input type="hidden" id="event-id">
+                <div class="form-group">
+                  <label>Nombre del Evento</label>
+                  <input type="text" id="event-name" required>
+                </div>
+                <div class="form-group">
+                  <label>Precio Base</label>
+                  <input type="number" id="event-price" required>
+                </div>
+
+                <div class="form-group" style="margin-top:20px; padding:15px; background:rgba(255,255,255,.03); border-radius:8px; border:1px dashed var(--glass-border)">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                     <h4 style="font-size:.7rem; color:var(--dorado)">Configurar Distancias</h4>
+                     <button type="button" class="btn-submit" style="width:auto; padding:5px 15px; font-size:.6rem" onclick="addDistanceRow()">+ Agregar</button>
+                  </div>
+                  <div id="distances-container"></div>
+                </div>
+
+                <div class="form-group">
+                  <label>Serie</label>
+                  <select id="event-series">
+                    <option value="gr">Serial GranRetto</option>
+                    <option value="ext">Otros</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Tag</label>
+                  <input type="text" id="event-tag" placeholder="ej: Aguas Abiertas">
+                </div>
+                <div class="form-group">
+                  <label>URL Imagen</label>
+                  <input type="text" id="event-img">
+                </div>
+                <div class="form-group">
+                  <label>URL Convocatoria</label>
+                  <input type="text" id="event-conv">
+                </div>
+                <div class="form-group">
+                  <label>Contenido Convocatoria</label>
+                  <textarea id="event-conv-text" rows="5"></textarea>
+                </div>
+                <button type="submit" class="btn-submit" id="event-submit-btn">Guardar Evento</button>
+                <button type="button" class="btn-submit" style="background:#444;margin-top:10px;display:none;" id="event-cancel-btn" onclick="resetEventForm()">Cancelar</button>
+              </form>
+            </div>
+          </div>
+          <div>
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-calendar-days"></i> Lista de Eventos</h3>
+              <div class="list-container" id="events-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB PRODUCTOS ── -->
+      <div id="tab-products" class="tab-pane">
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:30px;">
+          <div>
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-cart-plus"></i> Gestionar Producto</h3>
+              <form id="prod-form" onsubmit="saveProduct(event)">
+                <input type="hidden" id="prod-id">
+                <div class="form-group">
+                  <label>Nombre</label>
+                  <input type="text" id="prod-name" required>
+                </div>
+                <div class="form-group">
+                  <label>Precio ($)</label>
+                  <input type="number" id="prod-price" required>
+                </div>
+                <div class="form-group">
+                  <label>URL Imagen</label>
+                  <input type="text" id="prod-img">
+                </div>
+                <button type="submit" class="btn-submit" id="prod-submit-btn">Guardar Producto</button>
+                <button type="button" class="btn-submit" style="background:#444;margin-top:10px;display:none;" id="prod-cancel-btn" onclick="resetProdForm()">Cancelar</button>
+              </form>
+            </div>
+          </div>
+          <div>
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-shirt"></i> Inventario</h3>
+              <div class="list-container" id="prods-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB USUARIOS ── -->
+      <div id="tab-users" class="tab-pane">
+        <div style="display:grid; grid-template-columns: 1fr 1.5fr; gap:30px;">
+          <div>
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-user-plus"></i> Nuevo Usuario</h3>
+              <form id="user-form" onsubmit="saveUser(event)">
+                <div class="form-group">
+                  <label>Usuario</label>
+                  <input type="text" id="new-user-u" required>
+                </div>
+                <div class="form-group">
+                  <label>Contraseña</label>
+                  <input type="text" id="new-user-p" required>
+                </div>
+                <div class="form-group">
+                  <label>Eventos Asignados (Selección múltiple)</label>
+                  <select id="new-user-events" multiple style="height:120px; font-size:.7rem; padding:8px; background:var(--surface2); border:1px solid var(--glass-border); color:white; border-radius:4px; width:100%">
+                    <!-- Opciones cargadas dinámicamente -->
+                  </select>
+                  <p style="font-size:.55rem; color:var(--gris); margin-top:5px">Mantén Ctrl (Win) o Cmd (Mac) para seleccionar varios.</p>
+                </div>
+                <button type="submit" class="btn-submit">Crear Acceso</button>
+              </form>
+            </div>
+          </div>
+          <div>
+            <div class="admin-card">
+              <h3><i class="fa-solid fa-users-gear"></i> Administradores de Eventos</h3>
+              <div id="users-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ── MODAL PROMOS ── -->
+  <div id="modal-promos" class="modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="promo-event-name">Promociones</h3>
+        <button class="close-btn" onclick="closePromoModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="promo-form" onsubmit="addPromo(event)" style="margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--glass-border)">
+        <input type="hidden" id="promo-event-id">
+        <div class="form-group">
+          <label>Código del Cupón (ej: VERANO20)</label>
+          <input type="text" id="promo-code" required>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+           <div class="form-group">
+            <label>Tipo de Descuento</label>
+            <select id="promo-type">
+              <option value="pct">Porcentaje (%)</option>
+              <option value="fixed">Monto Fijo ($)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Valor (Descuento)</label>
+            <input type="number" id="promo-disc" required min="1">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1.5fr; gap:10px;">
+          <div class="form-group">
+             <label>Habilitado</label>
+             <select id="promo-status">
+               <option value="true">Activo</option>
+               <option value="false">Inactivo</option>
+             </select>
+          </div>
+          <div class="form-group">
+            <label>Aplicar a (Opcional)</label>
+            <select id="promo-dist-target">
+               <option value="all">Todas las distancias</option>
+               <!-- Dynamic -->
+            </select>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label>Desde (Opcional)</label>
+            <input type="date" id="promo-start">
+          </div>
+          <div class="form-group">
+            <label>Hasta (Opcional)</label>
+            <input type="date" id="promo-end">
+          </div>
+        </div>
+        <button type="submit" class="btn-submit">Añadir Promoción</button>
+      </form>
+      <div id="promos-list-container">
+        <!-- Lista de promos -->
+      </div>
+
+      <hr style="margin:20px 0; border:0; border-top:1px solid var(--glass-border)">
+      
+      <div id="unique-coupons-section">
+        <h4 style="font-size:.7rem; color:var(--dorado); margin-bottom:15px">Generar Cupones de Inscripción (100%)</h4>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px">
+          <div style="display:flex; gap:10px">
+            <input type="number" id="unique-count" placeholder="Cant." style="flex:0.3" min="1" max="50">
+            <select id="unique-distance" style="flex:0.7">
+              <option value="">Cualquier Distancia</option>
+            </select>
+          </div>
+          <button class="btn-submit" onclick="generateBatch()">Generar Cupones</button>
+        </div>
+        <div id="unique-list-container" style="max-height:200px; overflow-y:auto; background:var(--surface2); padding:10px; border-radius:4px">
+          <!-- Lista de cupones unicos -->
+        </div>
+      </div>
+      </div> <!-- /.modal-box -->
+    </div> <!-- /#modal-promos -->
+
+  <!-- ── MODAL COMPETIDORES ── -->
+  <div id="modal-competitors" class="modal">
+    <div class="modal-box" style="max-width:800px;">
+      <div class="modal-header">
+        <h3 id="comp-event-name">Competidores</h3>
+        <button class="close-btn" onclick="closeCompModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="comp-summary-sales"></div>
+      <div style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+        <span id="comp-count" style="font-size:.8rem; color:var(--dorado)"></span>
+        <button class="btn-submit" style="width:auto; padding:5px 15px; font-size:.7rem" onclick="downloadXLSX()">Exportar Excel</button>
+      </div>
+      <div id="comp-list-container" style="max-height:500px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:4px;">
+        <table style="width:100%; border-collapse:collapse; font-size:.75rem; text-align:left;">
+          <thead style="background:var(--surface2); position:sticky; top:0;">
+            <tr>
+              <th style="padding:10px; border-bottom:1px solid var(--glass-border)">Nombre</th>
+              <th style="padding:10px; border-bottom:1px solid var(--glass-border)">Email</th>
+              <th style="padding:10px; border-bottom:1px solid var(--glass-border)">Club</th>
+              <th style="padding:10px; border-bottom:1px solid var(--glass-border)">Distancia</th>
+              <th style="padding:10px; border-bottom:1px solid var(--glass-border)">Precio</th>
+              <th style="padding:10px; border-bottom:1px solid var(--glass-border)">Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="comp-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data Defaults (Same as index.html)
+    const defaultEvents = [
+      { id: 1, n: "Aguas Abiertas Veracruz", p: 950, img: "pexels-roodzn-32351528.jpg", tag: "Aguas Abiertas", series: "gr", conv: "" },
+      { id: 4, n: "Catemaco 2026", p: 800, img: "pexels-case-originals-34497245.jpg", tag: "Aguas Abiertas", series: "gr", conv: "" },
+      { id: 6, n: "Cruce 2026", p: 1100, img: "pexels-runffwpu-18436621.jpg", tag: "Élite", series: "gr", conv: "" },
+      { id: 7, n: "Gran Retto Puerto Escondido", p: 900, img: "pexels-mali-1415810.jpg", tag: "Élite", series: "gr", conv: "" },
+      { id: 3, n: "Gran Retto Cuba", p: 650, img: "pexels-detrasdelfotografo-24964271.jpg", tag: "Internacional", series: "gr", conv: "" },
+      { id: 2, n: "Huatulco 2026", p: 700, img: "pexels-nguyen-ngoc-tien-1321490019-32704988.jpg", tag: "Triatlón", series: "ext", conv: "" },
+      { id: 5, n: "Triatlón ATR", p: 550, img: "pexels-row-photo-798361734-19128857.jpg", tag: "Triatlón", series: "ext", conv: "" },
+    ];
+
+    const defaultProducts = Array.from({ length: 6 }, (_, i) => ({
+      id: i + 20, n: `Accesorio GR-${i + 1}`, p: 450, img: `GR-ITEM-${(i % 5) + 1}.jpg`
+    }));
+
+    const defaultUsers = [
+      { id: 1, u: 'admin', p: '1234', role: 'super', events: [] }
+    ];
+
+    let events = JSON.parse(localStorage.getItem('grEvents')) || defaultEvents;
+    let products = JSON.parse(localStorage.getItem('grProducts')) || defaultProducts;
+    let users = JSON.parse(localStorage.getItem('grUsers')) || defaultUsers;
+    let currentUser = JSON.parse(sessionStorage.getItem('grSession'));
+
+    function checkAuth() {
+      const uInput = document.getElementById('admin-user')?.value || '';
+      const pInput = document.getElementById('admin-pass').value;
+      
+      const user = users.find(usr => (usr.u === uInput || (usr.u === 'admin' && uInput === '')) && usr.p === pInput);
+      
+      if (user) {
+        currentUser = user;
+        sessionStorage.setItem('grSession', JSON.stringify(user));
+        document.getElementById('auth-overlay').style.display = 'none';
+        applyPermissions();
+        renderAll();
+      } else {
+        alert('Usuario o contraseña incorrectos');
+      }
+    }
+
+    if (currentUser) {
+      document.getElementById('auth-overlay').style.display = 'none';
+      setTimeout(() => {
+        applyPermissions();
+        renderAll();
+      }, 100);
+    }
+
+    function logout() {
+      sessionStorage.removeItem('grSession');
+      location.reload();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      const targetPane = document.getElementById(`tab-${tabId}`);
+      if (targetPane) targetPane.classList.add('active');
+      
+      const targetBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+      if (targetBtn) targetBtn.classList.add('active');
+    }
+
+    function applyPermissions() {
+      if (!currentUser) return;
+      const isSuper = currentUser.role === 'super';
+      
+      document.getElementById('user-display').innerText = `Sesión: ${currentUser.u}`;
+      
+      // Mostrar/Ocultar pestañas en sidebar
+      const navProducts = document.getElementById('nav-products');
+      const navUsers = document.getElementById('nav-users');
+      if (navProducts) navProducts.style.display = isSuper ? 'block' : 'none';
+      if (navUsers) navUsers.style.display = isSuper ? 'block' : 'none';
+
+      if (!isSuper) {
+        events = (JSON.parse(localStorage.getItem('grEvents')) || defaultEvents)
+                 .filter(e => (currentUser.events || []).includes(e.id));
+      } else {
+        events = JSON.parse(localStorage.getItem('grEvents')) || defaultEvents;
+      }
+    }
+
+    function renderAll() {
+      applyPermissions();
+      renderDashboardMetrics();
+      renderEvents();
+      renderProducts();
+      if (currentUser && currentUser.role === 'super') {
+        renderUsers();
+        renderUserEventsDropdown();
+      }
+    }
+
+    function renderDashboardMetrics() {
+      const allCompetitors = JSON.parse(localStorage.getItem('grCompetitors')) || [];
+      const allOrders = JSON.parse(localStorage.getItem('grOrders')) || [];
+      const eventIds = events.map(e => e.id);
+      
+      const filteredComps = allCompetitors.filter(c => eventIds.includes(c.eventId));
+      const filteredOrders = allOrders.filter(o => o.items.some(i => i.type === 'event' && eventIds.includes(events.find(ev => ev.n === i.n)?.id)));
+
+      // En modo super, mostramos todo. En modo limitado, solo lo relacionado.
+      const isSuper = currentUser.role === 'super';
+      const displayOrders = isSuper ? allOrders : filteredOrders;
+      const displayComps = isSuper ? allCompetitors : filteredComps;
+
+      // Stats Globales
+      document.getElementById('stat-orders').innerText = displayOrders.length;
+      document.getElementById('stat-competitors').innerText = displayComps.length;
+      
+      const totalRevenue = displayOrders.reduce((acc, o) => acc + (parseInt(o.total) || 0), 0);
+      document.getElementById('stat-revenue').innerText = `$${totalRevenue.toLocaleString()}`;
+
+      renderRecentOrders(displayOrders);
+
+      // Rendimiento por Evento
+      const metricsContainer = document.getElementById('dashboard-event-metrics');
+      metricsContainer.innerHTML = events.map(e => {
+        const compsForEvent = displayComps.filter(c => c.eventId === e.id);
+        const rev = compsForEvent.reduce((acc, c) => acc + (parseInt(c.price) || 0), 0);
+        return `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid rgba(255,255,255,.05)">
+            <div style="flex:1">
+              <h4 style="font-size:.85rem">${e.n}</h4>
+              <div style="display:flex; gap:15px; font-size:.65rem; margin-top:4px">
+                <span style="color:var(--dorado)"><i class="fa-solid fa-user-check"></i> ${compsForEvent.length}</span>
+                <span style="color:var(--accent)"><i class="fa-solid fa-money-bill-wave"></i> $${rev.toLocaleString()}</span>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <button class="btn-icon" onclick="viewCompetitors(${e.id})" title="Ver Estadísticas Detalladas e Inscritos">
+                <i class="fa-solid fa-chart-column"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRecentOrders(orders) {
+      const container = document.getElementById('dashboard-recent-orders');
+      if (!orders || orders.length === 0) {
+        container.innerHTML = '<p style="padding:20px; text-align:center; color:var(--gris); font-size:.75rem">No hay transacciones registradas.</p>';
+        return;
+      }
+
+      container.innerHTML = `
+        <table style="width:100%; border-collapse:collapse; font-size:.7rem; text-align:left;">
+          <thead style="background:rgba(255,255,255,.05); border-bottom:1px solid var(--glass-border)">
+            <tr>
+              <th style="padding:10px">ID Orden (12 Dígitos)</th>
+              <th style="padding:10px">Cliente</th>
+              <th style="padding:10px">Total</th>
+              <th style="padding:10px">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${orders.slice().reverse().slice(0, 50).map(o => `
+              <tr style="border-bottom:1px solid rgba(255,255,255,.03)">
+                <td style="padding:10px; font-family:monospace; color:var(--dorado)">${o.id}</td>
+                <td style="padding:10px">${o.customer}</td>
+                <td style="padding:10px">$${o.total.toLocaleString()}</td>
+                <td style="padding:10px; font-size:.6rem; color:var(--gris)">${o.date}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderEvents() {
+      const container = document.getElementById('events-list');
+      container.innerHTML = events.map(e => `
+        <div class="list-item">
+          <div class="item-info">
+            <h4 style="display:flex; align-items:center; gap:8px">
+              ${e.n} 
+              ${e.promos && e.promos.length > 0 ? `<span class="promo-badge">${e.promos.length} PROMO</span>` : ''}
+            </h4>
+            <p>$${e.p} | ${e.tag} | ${e.series === 'gr' ? 'GranRetto' : 'Otro'}</p>
+          </div>
+          <div class="item-actions">
+            <button class="btn-icon promo" onclick="managePromos(${e.id})" title="Gestionar Promos"><i class="fa-solid fa-tag"></i></button>
+            <button class="btn-icon" onclick="editEvent(${e.id})" title="Editar"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-icon delete" onclick="deleteEvent(${e.id})" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderProducts() {
+      const container = document.getElementById('prods-list');
+      container.innerHTML = products.map(p => `
+        <div class="list-item">
+          <div class="item-info">
+            <h4>${p.n}</h4>
+            <p>$${p.p}</p>
+          </div>
+          <div class="item-actions">
+            <button class="btn-icon" onclick="editProduct(${p.id})"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn-icon delete" onclick="deleteProduct(${p.id})"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- EVENTS CRUD ---
+    function saveEvent(e) {
+      e.preventDefault();
+      const id = document.getElementById('event-id').value;
+      
+      const distanceRows = document.querySelectorAll('.distance-row');
+      const distances = Array.from(distanceRows).map(row => {
+        const stageRows = row.querySelectorAll('.stage-row');
+        const stages = Array.from(stageRows).map(sr => ({
+          until: sr.querySelector('.stage-date').value,
+          price: parseInt(sr.querySelector('.stage-price').value)
+        })).filter(s => s.until && s.price);
+
+        return {
+          n: row.querySelector('.dist-n').value,
+          p: parseInt(row.querySelector('.dist-p').value),
+          pricingStages: stages
+        };
+      }).filter(d => d.n && d.p);
+
+      const newEvent = {
+        id: id ? parseInt(id) : Date.now(),
+        n: document.getElementById('event-name').value,
+        tag: document.getElementById('event-tag').value,
+        p: parseInt(document.getElementById('event-price').value),
+        series: document.getElementById('event-series').value,
+        img: document.getElementById('event-img').value || 'https://placehold.co/320x190/141414/444?text=GR',
+        conv: document.getElementById('event-conv').value,
+        convText: document.getElementById('event-conv-text').value,
+        promos: id ? (events.find(ev => ev.id === parseInt(id))?.promos || []) : [],
+        uniqueCoupons: id ? (events.find(ev => ev.id === parseInt(id))?.uniqueCoupons || []) : [],
+        distances: distances
+      };
+
+      if (id) {
+        events = events.map(ev => ev.id === parseInt(id) ? newEvent : ev);
+      } else {
+        events.push(newEvent);
+      }
+
+      localStorage.setItem('grEvents', JSON.stringify(events));
+      resetEventForm();
+      renderAll();
+    }
+
+    function editEvent(id) {
+      const e = events.find(ev => ev.id === id);
+      // document.getElementById('modal-title').innerText = 'Editar Evento'; // This element does not exist in the provided context
+      document.getElementById('event-id').value = e.id;
+      document.getElementById('event-name').value = e.n;
+      document.getElementById('event-price').value = e.p;
+      document.getElementById('event-series').value = e.series;
+      document.getElementById('event-tag').value = e.tag;
+      document.getElementById('event-img').value = e.img;
+      document.getElementById('event-conv').value = e.conv || '';
+      document.getElementById('event-conv-text').value = e.convText || '';
+      
+      const container = document.getElementById('distances-container');
+      container.innerHTML = '';
+      if (e.distances) {
+        e.distances.forEach(d => addDistanceRow(d.n, d.p));
+      }
+
+      document.getElementById('event-submit-btn').innerText = 'Actualizar Evento';
+      document.getElementById('event-cancel-btn').style.display = 'block';
+      switchTab('events');
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function addDistanceRow(name = '', price = '', stages = []) {
+      const div = document.createElement('div');
+      div.className = 'distance-row';
+      div.style = 'background:var(--carbon); border:1px solid var(--glass-border); padding:15px; border-radius:8px; margin-bottom:15px; position:relative;';
+      
+      const stagesHtml = (stages || []).map((s, i) => `
+        <div class="stage-row" style="display:flex; gap:5px; margin-top:5px">
+          <input type="date" class="stage-date" value="${s.until}" style="flex:1; font-size:.6rem; padding:5px">
+          <input type="number" class="stage-price" value="${s.price}" style="width:70px; font-size:.6rem; padding:5px">
+          <button type="button" class="btn-icon" style="width:24px; height:24px" onclick="this.parentElement.remove()">×</button>
+        </div>
+      `).join('');
+
+      div.innerHTML = `
+        <button type="button" class="btn-icon delete" style="position:absolute; top:10px; right:10px; width:28px; height:28px" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+        <div style="display:flex; gap:10px; margin-bottom:10px">
+          <div style="flex:1"><label>Nombre</label><input type="text" class="dist-n" value="${name}" placeholder="Distancia"></div>
+          <div style="width:120px"><label>Precio Base</label><input type="number" class="dist-p" value="${price}" placeholder="$$"></div>
+        </div>
+        <div class="stages-container">
+          <label style="font-size:.55rem; color:var(--dorado)">Etapas de Precio (Costo por fecha)</label>
+          <div class="stages-list">${stagesHtml}</div>
+          <button type="button" class="btn-submit" style="width:auto; padding:3px 10px; font-size:.55rem; margin-top:8px" onclick="addPricingStage(this)">+ Añadir Etapa</button>
+        </div>
+      `;
+      document.getElementById('distances-container').appendChild(div);
+    }
+
+    function addPricingStage(btn) {
+      const list = btn.previousElementSibling;
+      const div = document.createElement('div');
+      div.className = 'stage-row';
+      div.style = 'display:flex; gap:5px; margin-top:5px';
+      div.innerHTML = `
+        <input type="date" class="stage-date" style="flex:1; font-size:.6rem; padding:5px">
+        <input type="number" class="stage-price" style="width:70px; font-size:.6rem; padding:5px">
+        <button type="button" class="btn-icon" style="width:24px; height:24px" onclick="this.parentElement.remove()">×</button>
+      `;
+      list.appendChild(div);
+    }
+
+    function deleteEvent(id) {
+      if (confirm('¿Eliminar este evento?')) {
+        events = events.filter(e => e.id !== id);
+        localStorage.setItem('grEvents', JSON.stringify(events));
+        renderAll();
+      }
+    }
+
+    function resetEventForm() {
+      document.getElementById('event-form').reset();
+      document.getElementById('event-id').value = '';
+      document.getElementById('event-submit-btn').innerText = 'Guardar Evento';
+      document.getElementById('event-cancel-btn').style.display = 'none';
+    }
+
+    // --- PRODUCTS CRUD ---
+    function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('prod-id').value;
+      const newProd = {
+        id: id ? parseInt(id) : Date.now(),
+        n: document.getElementById('prod-name').value,
+        p: parseInt(document.getElementById('prod-price').value),
+        img: document.getElementById('prod-img').value || 'https://placehold.co/180x140/1a1a1a/444?text=GR'
+      };
+
+      if (id) {
+        products = products.map(p => p.id === parseInt(id) ? newProd : p);
+      } else {
+        products.push(newProd);
+      }
+
+      localStorage.setItem('grProducts', JSON.stringify(products));
+      resetProdForm();
+      renderProducts();
+    }
+
+    function editProduct(id) {
+      const p = products.find(pr => pr.id === id);
+      document.getElementById('prod-id').value = p.id;
+      document.getElementById('prod-name').value = p.n;
+      document.getElementById('prod-price').value = p.p;
+      document.getElementById('prod-img').value = p.img;
+      
+      document.getElementById('prod-submit-btn').innerText = 'Actualizar Producto';
+      document.getElementById('prod-cancel-btn').style.display = 'block';
+    }
+
+    function deleteProduct(id) {
+      if (confirm('¿Eliminar este producto?')) {
+        products = products.filter(p => p.id !== id);
+        localStorage.setItem('grProducts', JSON.stringify(products));
+        renderProducts();
+      }
+    }
+
+    function resetProdForm() {
+      document.getElementById('prod-form').reset();
+      document.getElementById('prod-id').value = '';
+      document.getElementById('prod-submit-btn').innerText = 'Guardar Producto';
+      document.getElementById('prod-cancel-btn').style.display = 'none';
+    }
+
+    // --- PROMOS MANAGEMENT ---
+    function managePromos(id) {
+      const e = events.find(ev => ev.id === id);
+      document.getElementById('promo-event-id').value = id;
+      document.getElementById('promo-event-name').innerText = `Promos: ${e.n}`;
+      
+      const distSelect = document.getElementById('unique-distance');
+      const promoDistSelect = document.getElementById('promo-dist-target');
+      distSelect.innerHTML = '<option value="">Selecciona Distancia (100%)</option>';
+      promoDistSelect.innerHTML = '<option value="all">Todas las distancias</option>';
+
+      if (e.distances && e.distances.length > 0) {
+        e.distances.forEach(d => {
+          distSelect.innerHTML += `<option value="${d.n}">${d.n} ($${d.p})</option>`;
+          promoDistSelect.innerHTML += `<option value="${d.n}">${d.n}</option>`;
+        });
+      } else {
+         distSelect.innerHTML += `<option value="General">General ($${e.p})</option>`;
+         promoDistSelect.innerHTML += `<option value="General">General</option>`;
+      }
+
+      renderPromoList(e);
+      renderUniqueList(e);
+      document.getElementById('modal-promos').style.display = 'flex';
+    }
+
+    function closePromoModal() {
+      document.getElementById('modal-promos').style.display = 'none';
+    }
+
+    function renderPromoList(event) {
+      const container = document.getElementById('promos-list-container');
+      if (!event.promos || event.promos.length === 0) {
+        container.innerHTML = '<p style="font-size:.75rem; color:var(--gris)">No hay promociones activas.</p>';
+        return;
+      }
+
+      container.innerHTML = event.promos.map(p => `
+        <div class="list-item" style="padding:10px 0">
+          <div class="item-info">
+            <h4 style="color:var(--dorado)">${p.code} (-${p.type === 'fixed' ? '$' : ''}${p.disc}${p.type === 'fixed' ? '' : '%'})</h4>
+            <p style="font-size:.65rem">${p.start || 'Siempre'} | ${p.end || 'Indefinido'} | <b>${p.distTarget === 'all' ? 'Todas' : p.distTarget}</b></p>
+          </div>
+          <button class="btn-icon delete" onclick="deletePromo(${event.id}, '${p.code}')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      `).join('');
+    }
+
+    function renderUniqueList(event) {
+      const container = document.getElementById('unique-list-container');
+      if (!event.uniqueCoupons || event.uniqueCoupons.length === 0) {
+        container.innerHTML = '<p style="font-size:.65rem; color:var(--gris)">No se han generado cupones únicos.</p>';
+        return;
+      }
+
+      container.innerHTML = event.uniqueCoupons.map(c => `
+        <div style="display:flex; justify-content:space-between; font-size:.7rem; padding:4px 0; border-bottom:1px solid rgba(255,255,255,.05)">
+          <div style="display:flex; flex-direction:column">
+            <span style="font-family:monospace; color:${c.used ? 'var(--gris)' : 'white'}; text-decoration:${c.used ? 'line-through' : 'none'}">${c.code}</span>
+            <span style="font-size:.55rem; color:var(--gris)">${c.dist || 'General'}</span>
+          </div>
+          <span style="color:${c.used ? 'var(--rojo)' : 'var(--dorado)'}">${c.used ? 'USADO' : 'DISPONIBLE'}</span>
+        </div>
+      `).reverse().join('');
+    }
+
+    function generateBatch() {
+      const eventId = parseInt(document.getElementById('promo-event-id').value);
+      const count = parseInt(document.getElementById('unique-count').value);
+      const dist = document.getElementById('unique-distance').value;
+
+      if (!count || count < 1) return;
+      if (!dist) { alert("Por favor selecciona una distancia para vincular los cupones."); return; }
+
+      const event = events.find(ev => ev.id === eventId);
+      if (!event.uniqueCoupons) event.uniqueCoupons = [];
+
+      for (let i = 0; i < count; i++) {
+        const code = 'GR-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        event.uniqueCoupons.push({ code, used: false, dist: dist });
+      }
+
+      localStorage.setItem('grEvents', JSON.stringify(events));
+      renderUniqueList(event);
+      document.getElementById('unique-count').value = '';
+    }
+
+    function addPromo(e) {
+      e.preventDefault();
+      const eventId = parseInt(document.getElementById('promo-event-id').value);
+      const code = document.getElementById('promo-code').value.toUpperCase();
+      const disc = parseInt(document.getElementById('promo-disc').value);
+      const start = document.getElementById('promo-start').value;
+      const end = document.getElementById('promo-end').value;
+      const type = document.getElementById('promo-type').value;
+      const distTarget = document.getElementById('promo-dist-target').value;
+
+      const event = events.find(ev => ev.id === eventId);
+      if (!event.promos) event.promos = [];
+
+      if (event.promos.find(p => p.code === code)) {
+        alert('Este código ya existe para este evento.');
+        return;
+      }
+
+      event.promos.push({ code, disc, start, end, type, distTarget });
+      localStorage.setItem('grEvents', JSON.stringify(events));
+      
+      document.getElementById('promo-form').reset();
+      renderPromoList(event);
+      renderEvents(); 
+    }
+
+    function deletePromo(eventId, code) {
+      const event = events.find(ev => ev.id === eventId);
+      event.promos = event.promos.filter(p => p.code !== code);
+      localStorage.setItem('grEvents', JSON.stringify(events));
+      renderPromoList(event);
+      renderEvents();
+    }
+
+    // --- USER MANAGEMENT ---
+    function renderUsers() {
+      const container = document.getElementById('users-list');
+      if (!container) return;
+      
+      const allEvents = JSON.parse(localStorage.getItem('grEvents')) || defaultEvents;
+
+      container.innerHTML = users.filter(u => u.role !== 'super').map(u => {
+        // Convertir IDs a Nombres para la visualización
+        const assignedNames = (u.events || []).map(id => {
+          const ev = allEvents.find(e => e.id === id);
+          return ev ? ev.n : `Desconocido (${id})`;
+        }).join(', ');
+
+        return `
+          <div class="list-item">
+            <div class="item-info">
+              <h4 style="color:var(--accent)">${u.u}</h4>
+              <p style="font-size:.65rem; color:var(--gris)">Gestiona: <span style="color:var(--dorado)">${assignedNames || 'Ninguno'}</span></p>
+            </div>
+            <div class="item-actions">
+              <button class="btn-icon delete" onclick="deleteUser(${u.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderUserEventsDropdown() {
+      const select = document.getElementById('new-user-events');
+      if (!select) return;
+      
+      const allEvents = (JSON.parse(localStorage.getItem('grEvents')) || defaultEvents).sort((a,b) => a.n.localeCompare(b.n));
+      select.innerHTML = allEvents.map(e => `<option value="${e.id}">${e.n}</option>`).join('');
+    }
+
+    function saveUser(e) {
+      e.preventDefault();
+      const u = document.getElementById('new-user-u').value;
+      const p = document.getElementById('new-user-p').value;
+      
+      const select = document.getElementById('new-user-events');
+      const selectedIds = Array.from(select.selectedOptions).map(opt => parseInt(opt.value));
+
+      const newUser = {
+        id: Date.now(),
+        u, p, events: selectedIds, role: 'event-admin'
+      };
+
+      users.push(newUser);
+      localStorage.setItem('grUsers', JSON.stringify(users));
+      document.getElementById('user-form').reset();
+      renderAll();
+    }
+
+    function deleteUser(id) {
+      if (confirm('¿Eliminar este usuario?')) {
+        users = users.filter(u => u.id !== id);
+        localStorage.setItem('grUsers', JSON.stringify(users));
+        renderAll();
+      }
+    }
+
+    // --- COMPETITORS VIEW ---
+    let currentCompEventId = null;
+
+    function viewCompetitors(eventId) {
+      currentCompEventId = eventId;
+      const allCompetitors = JSON.parse(localStorage.getItem('grCompetitors')) || [];
+      const eventComps = allCompetitors.filter(c => c.eventId === eventId);
+      
+      const fullEvents = JSON.parse(localStorage.getItem('grEvents')) || defaultEvents;
+      const event = fullEvents.find(e => e.id === eventId);
+      if (!event) return alert("Evento no encontrado");
+
+      const modal = document.getElementById('modal-competitors');
+      if (!modal) return console.error("Modal not found");
+
+      document.getElementById('comp-event-name').innerText = `Estadísticas y Ventas: ${event.n}`;
+      document.getElementById('comp-count').innerText = `${eventComps.length} inscritos en total`;
+      
+      // Breakdown by Distance
+      const breakdown = {};
+      eventComps.forEach(c => {
+        const dist = c.distance || 'General';
+        if (!breakdown[dist]) breakdown[dist] = { count: 0, revenue: 0 };
+        breakdown[dist].count++;
+        breakdown[dist].revenue += (parseInt(c.price) || 0);
+      });
+
+      const breakdownHtml = `
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:20px;">
+          ${Object.entries(breakdown).map(([dist, data]) => `
+            <div style="background:rgba(255,255,255,.03); border:1px solid var(--glass-border); padding:10px; border-radius:6px; border-left:3px solid var(--rojo)">
+              <div style="font-size:.6rem; color:var(--gris); text-transform:uppercase; margin-bottom:4px">${dist}</div>
+              <div style="font-family:'Oswald'; font-size:1.1rem">${data.count} <span style="font-size:.7rem; color:var(--dorado)">($${data.revenue.toLocaleString()})</span></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      
+      const summaryDiv = document.getElementById('comp-summary-sales');
+      if (summaryDiv) summaryDiv.innerHTML = breakdownHtml;
+
+      const tbody = document.getElementById('comp-table-body');
+      tbody.innerHTML = eventComps.map(c => `
+        <tr>
+          <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.05)">${c.name} ${c.lastName || ''}</td>
+          <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.05)">${c.email}</td>
+          <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.05)">${c.club}</td>
+          <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.05)">${c.distance}</td>
+          <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.05)">$${c.price}</td>
+          <td style="padding:10px; border-bottom:1px solid rgba(255,255,255,.05)">${c.date.split(',')[0]}</td>
+        </tr>
+      `).join('');
+      
+      if (eventComps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="padding:20px; text-align:center; color:var(--gris)">No hay competidores inscritos aún.</td></tr>';
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    function closeCompModal() {
+      document.getElementById('modal-competitors').style.display = 'none';
+    }
+
+    function downloadXLSX() {
+      const allCompetitors = JSON.parse(localStorage.getItem('grCompetitors')) || [];
+      const filtered = allCompetitors.filter(c => c.eventId === currentCompEventId);
+      if (filtered.length === 0) return alert("No hay datos para exportar");
+
+      const event = (JSON.parse(localStorage.getItem('grEvents')) || defaultEvents).find(e => e.id === currentCompEventId);
+      const eventName = event ? event.n : 'Evento';
+
+      // Preparar datos para SheetJS
+      const data = filtered.map(c => ({
+        "Nombre": c.name,
+        "Apellidos": c.lastName,
+        "Email": c.email,
+        "Club": c.club,
+        "Distancia": c.distance,
+        "Precio": c.price,
+        "Fecha": c.date,
+        "ID Orden": c.orderId
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Competidores");
+
+      // Exportar
+      XLSX.writeFile(workbook, `competidores_${eventName.replace(/\s+/g, '_')}.xlsx`);
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>

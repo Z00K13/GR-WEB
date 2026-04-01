@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gran Retto | Versión Elite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rojo: #cc0000;
+            --negro: #050505;
+            --glass: rgba(10, 10, 10, 0.96);
+            --blanco: #ffffff;
+            --dorado: #ffcc00;
+        }
+
+        html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--negro) url('fondo gr2026.jpg') no-repeat center center fixed;
+            background-size: 200%;
+            background-repeat: repeat;
+            color: var(--blanco);
+            overflow-x: hidden;
+        }
+
+        header {
+            position: fixed; width: 100%; padding: 15px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 1000; background: rgba(0,0,0,0.9); backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--rojo);
+        }
+        .logo { font-family: 'Oswald'; font-size: 1.8rem; font-style: italic; text-transform: uppercase; }
+        .logo span { color: var(--rojo); }
+        
+        nav { display: flex; align-items: center; gap: 20px; }
+        nav a { color: white; text-decoration: none; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
+
+        .user-status {
+            background: #1a1a1a; padding: 8px 15px; border-radius: 4px;
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            border: 1px solid #333; font-size: 0.7rem; font-weight: 900;
+        }
+        .user-status.logged-in { border-color: var(--dorado); background: rgba(255, 204, 0, 0.1); }
+
+        /* HERO */
+        .hero { height: 100vh; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        #parallax-bg { position: absolute; top: 0; left: 0; width: 100%; height: 130%; z-index: -1; }
+        .hero-video { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.3); }
+
+        /* SECCIONES GENERALES */
+        section { padding: 100px 8%; opacity: 0; transform: translateY(50px); transition: all 1s ease-out; }
+        section.visible { opacity: 1; transform: translateY(0); }
+
+        .section-title { 
+            font-family: 'Oswald'; font-size: 3.5rem; margin-bottom: 40px; 
+            border-left: 10px solid var(--rojo); padding-left: 20px; font-style: italic;
+        }
+
+        /* --- NUEVOS ESTILOS VIDEO DINÁMICO --- */
+        .video-container-modern {
+            position: relative;
+            width: 100%;
+            height: 550px;
+            overflow: hidden;
+            clip-path: polygon(0 15%, 100% 0, 100% 85%, 0 100%);
+            margin: 40px 0;
+            background: #000;
+        }
+
+        .video-container-modern video {
+            width: 100%;
+            height: 140%; 
+            object-fit: cover;
+            filter: saturate(1.3) brightness(0.7);
+            position: absolute;
+            top: -20%;
+        }
+
+        .video-overlay-cinematic {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(5,5,5,1) 0%, rgba(5,5,5,0) 40%, rgba(5,5,5,0) 60%, rgba(5,5,5,1) 100%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .floating-bg-text {
+            position: absolute;
+            font-family: 'Oswald';
+            font-size: 8vw;
+            color: rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+            text-transform: uppercase;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* CARRETE */
+        .slider-wrapper { overflow: hidden; width: 100%; position: relative; padding: 20px 0; }
+        .event-track { display: flex; width: calc(330px * 14); animation: scroll-auto 45s linear infinite; }
+        .event-track:hover { animation-play-state: paused; }
+        @keyframes scroll-auto { 0% { transform: translateX(0); } 100% { transform: translateX(calc(-330px * 7)); } }
+        .event-card { width: 310px; margin: 0 10px; background: var(--glass); border: 1px solid #222; flex-shrink: 0; }
+        .event-card img { width: 100%; height: 210px; object-fit: cover; }
+
+        /* SHOP */
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+        .prod-card { background: white; color: black; padding: 20px; text-align: center; border-radius: 5px; }
+        .prod-card img { width: 100%; height: 160px; object-fit: contain; }
+
+        /* SECCIÓN CONTACTO ADICIONAL */
+        .contact-container { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; }
+        .contact-info h3 { font-family: 'Oswald'; color: var(--rojo); margin-bottom: 20px; font-size: 1.5rem; }
+        .contact-info p { margin-bottom: 15px; opacity: 0.8; font-size: 0.9rem; }
+        .social-placeholder { display: flex; gap: 15px; margin-top: 30px; }
+        .social-box { width: 40px; height: 40px; background: #222; border: 1px solid var(--rojo); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; cursor: pointer; }
+
+        /* CARRITO SIDEBAR */
+        #cart-sidebar { 
+            position: fixed; top: 0; right: -450px; width: 450px; height: 100vh; 
+            background: #080808; z-index: 2000; padding: 40px; transition: 0.5s; 
+            border-left: 4px solid var(--rojo); overflow-y: auto; 
+        }
+        #cart-sidebar.open { right: 0; }
+        .close-cart { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; cursor: pointer; color: var(--rojo); }
+
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .remove-btn { color: #555; cursor: pointer; font-size: 0.8rem; border: none; background: none; }
+        .remove-btn:hover { color: var(--rojo); }
+
+        /* MODALES */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; align-items: center; justify-content: center; overflow-y: auto; }
+        .modal-content { max-width: 500px; width: 90%; background: #111; padding: 40px; border-top: 5px solid var(--rojo); position: relative; }
+        
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 15px; background: #1a1a1a; border: 1px solid #333; color: white; font-family: 'Montserrat'; }
+        
+        .btn-gr { background: var(--rojo); color: white; border: none; padding: 12px 25px; font-weight: 900; text-transform: uppercase; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); transition: 0.3s; }
+        .btn-gr:hover { background: var(--blanco); color: var(--negro); }
+
+        .rank-item { display: grid; grid-template-columns: 50px 1fr 120px; align-items: center; background: rgba(255,255,255,0.03); padding: 18px; margin-bottom: 10px; border-radius: 4px; }
+        .rank-item.my-rank { border: 1px solid var(--dorado); background: rgba(255, 204, 0, 0.05); }
+
+        @media (max-width: 768px) { .contact-container { grid-template-columns: 1fr; } }
+        @media (max-width: 480px) { #cart-sidebar { width: 100%; } .video-container-modern { height: 350px; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">GRAN <span>RETTO</span></div>
+        <nav>
+            <a href="#nosotros">Nosotros</a>
+            <a href="#eventos">Eventos</a>
+            <a href="#ranking">Ranking</a>
+            <a href="#tienda">Tienda</a>
+            <a href="#contacto">Contacto</a>
+            <div class="user-status" id="login-trigger" onclick="toggleLogin()">
+                <span id="user-label">ACCESO ATLETA</span>
+            </div>
+            <a href="javascript:void(0)" onclick="toggleCart()" style="color:var(--rojo)">🛒 (<span id="cart-count">0</span>)</a>
+        </nav>
+    </header>
+
+    <section id="inicio" class="hero" style="opacity:1; transform:none;">
+        <div id="parallax-bg">
+            <video autoplay muted loop playsinline class="hero-video">
+                <source src="GR-VIDEO-HERO.mp4" type="video/mp4">
+            </video>
+        </div>
+        <div style="text-align:center; z-index:10;">
+            <h1 style="font-family:'Oswald'; font-size: 6rem; font-style: italic;">GRAN RETTO</h1>
+            <p style="letter-spacing: 10px; font-weight: 300;">PASIÓN POR EL DEPORTE</p>
+        </div>
+    </section>
+
+    <section id="nosotros" style="padding: 60px 0;">
+        <div style="padding: 0 8% 40px 8%;">
+            <h2 class="section-title">Nuestra Esencia</h2>
+            <p style="font-size:1.1rem; line-height:1.8; opacity:0.8; max-width: 700px;">Líderes en organización y cronometraje deportivo. Nos enfocamos en la experiencia del atleta en cada brazada y cada zancada.</p>
+        </div>
+
+        <div class="video-container-modern">
+            <div class="floating-bg-text" id="scroll-text">VERACRUZ • MEXICO • ELITE • SERIES</div>
+            <div class="video-overlay-cinematic">
+                <h3 style="font-family:'Oswald'; font-size: 3rem; font-style: italic; letter-spacing: 8px;">LOS<span style="color:var(--rojo);">LIMITES</span></h3>
+                <p style="font-weight: 700; font-size: 0.8rem; letter-spacing: 4px; border: 1px solid var(--rojo); padding: 5px 15px; margin-top: 15px;">LOS PONES TÚ</p>
+            </div>
+            <video id="parallax-video" autoplay muted loop playsinline>
+                <source src="113675-698820547_small.mp4" type="video/mp4">
+            </video>
+        </div>
+    </section>
+
+    <section id="eventos">
+        <h2 class="section-title">Próximos Retos</h2>
+        <div class="slider-wrapper">
+            <div class="event-track" id="event-track-box"></div>
+        </div>
+    </section>
+
+    <section id="ranking">
+        <h2 class="section-title">Ranking Global</h2>
+        <div id="leaderboard-box"></div>
+    </section>
+
+    <section id="tienda">
+        <h2 class="section-title">E-Commerce</h2>
+        <div class="shop-grid" id="shop-box"></div>
+    </section>
+
+    <section id="contacto">
+        <h2 class="section-title">Contacto</h2>
+        <div class="contact-container">
+            <div class="contact-form">
+                <form onsubmit="event.preventDefault(); alert('Mensaje enviado. Nos pondremos en contacto contigo pronto.'); this.reset();">
+                    <input type="text" placeholder="Nombre completo" required>
+                    <input type="email" placeholder="Correo electrónico" required>
+                    <input type="text" placeholder="Asunto">
+                    <textarea rows="5" placeholder="Tu mensaje..." required></textarea>
+                    <button type="submit" class="btn-gr">Enviar Mensaje</button>
+                </form>
+            </div>
+            <div class="contact-info">
+                <h3>ATENCIÓN AL ATLETA</h3>
+                <p>¿Tienes dudas sobre tu inscripción o resultados? Nuestro equipo de soporte está listo para ayudarte.</p>
+                <p><strong>UBICACIÓN:</strong> Veracruz, México.</p>
+                <p><strong>EMAIL:</strong> soporte@granretto.mx</p>
+                <p><strong>HORARIO:</strong> Lun - Vie: 9:00 AM - 6:00 PM</p>
+                
+                <div class="social-placeholder">
+                    <div class="social-box">FB</div>
+                    <div class="social-box">IG</div>
+                    <div class="social-box">YT</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer style="padding: 40px 8%; background: #000; text-align: center; border-top: 1px solid #222;">
+        <p style="font-size: 0.7rem; opacity: 0.5;">&copy; 2026 GRAN RETTO | TODOS LOS DERECHOS RESERVADOS.</p>
+    </footer>
+
+    <aside id="cart-sidebar">
+        <span class="close-cart" onclick="toggleCart()">✕</span>
+        <h2 style="font-family:'Oswald'; margin-bottom:30px;">CARRITO</h2>
+        <div id="cart-list"></div>
+        <div id="cart-footer" style="margin-top:30px;">
+            <h3 id="total-text" style="border-top:1px solid #333; padding-top:20px;">Total: $0</h3>
+            <button class="btn-gr" style="width:100%; margin-top:20px;" onclick="openPaymentModal()">Pagar e Inscribir</button>
+        </div>
+    </aside>
+
+    <div id="modal-payment" class="modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Oswald'; color:var(--rojo); margin-bottom:20px;">DETALLES DE INSCRIPCIÓN</h2>
+            <form id="payment-form" onsubmit="processOrder(event)">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="text" placeholder="Nombre" required>
+                    <input type="text" placeholder="Apellidos" required>
+                </div>
+                <input type="email" placeholder="Correo Electrónico" required>
+                <input type="text" placeholder="Club / Equipo">
+                
+                <h3 style="font-size:0.8rem; margin:10px 0; color:var(--dorado);">DATOS DE PAGO</h3>
+                <input type="text" placeholder="Número de Tarjeta" maxlength="16" required>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="text" placeholder="MM/AA" maxlength="5" required>
+                    <input type="password" placeholder="CVV" maxlength="3" required>
+                </div>
+                
+                <button type="submit" class="btn-gr" style="width:100%;">Confirmar Pedido</button>
+                <p onclick="closePaymentModal()" style="text-align:center; margin-top:15px; cursor:pointer; font-size:0.7rem;">Cancelar</p>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-login" class="modal">
+        <div class="modal-content">
+            <h2 style="font-family:'Oswald'; color:var(--rojo);">LOGIN ATLETA</h2>
+            <input type="text" id="user-input" placeholder="ID Competidor">
+            <button class="btn-gr" style="width:100%;" onclick="login()">Entrar</button>
+            <p onclick="toggleLogin()" style="margin-top:15px; font-size:0.7rem; cursor:pointer;">Cerrar</p>
+        </div>
+    </div>
+
+    <script>
+        let cart = [];
+        let currentUser = null;
+
+        const eventData = [
+            { id: 1, n: "Aguas Abiertas Veracruz", p: 950, img: "pexels-roodzn-32351528.jpg" },
+            { id: 2, n: "Huatulco 2026", p: 700, img: "pexels-nguyen-ngoc-tien-1321490019-32704988.jpg" },
+            { id: 3, n: "Gran Retto Cuba", p: 650, img: "pexels-detrasdelfotografo-24964271.jpg" },
+            { id: 4, n: "Catemaco 2026", p: 800, img: "pexels-case-originals-34497245.jpg" },
+            { id: 5, n: "Triatlón ATR", p: 550, img: "pexels-row-photo-798361734-19128857.jpg" },
+            { id: 6, n: "Cruce 2026", p: 1100, img: "pexels-runffwpu-18436621.jpg" },
+            { id: 7, n: "Gran Retto Puerto Escondido", p: 900, img: "pexels-mali-1415810.jpg" }
+        ];
+
+        const itemData = Array.from({length: 6}, (_, i) => ({ 
+            id: i+20, n: `Accesorio GR-${i+1}`, p: 450, img: `GR-ITEM-${(i%5)+1}.jpg` 
+        }));
+
+        function init() {
+            const track = document.getElementById('event-track-box');
+            track.innerHTML = [...eventData, ...eventData].map(e => `
+                <div class="event-card">
+                    <img src="${e.img}">
+                    <div style="padding:15px">
+                        <h4 style="font-size:0.8rem; height:40px">${e.n}</h4>
+                        <button class="btn-gr" style="font-size:0.6rem;" onclick="addToCart(${e.id}, 'e')">Inscribirme</button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('shop-box').innerHTML = itemData.map(p => `
+                <div class="prod-card">
+                    <img src="${p.img}" onerror="this.src='https://via.placeholder.com/150'">
+                    <h5 style="margin:10px 0; font-size:0.8rem;">${p.n}</h5>
+                    <button class="btn-gr" style="font-size:0.6rem;" onclick="addToCart(${p.id}, 'p')">🛒 $${p.p}</button>
+                </div>
+            `).join('');
+            renderRanking();
+        }
+
+        window.addEventListener('scroll', () => {
+            const video = document.getElementById('parallax-video');
+            const scrollText = document.getElementById('scroll-text');
+            const container = video.parentElement;
+            const rect = container.getBoundingClientRect();
+            
+            if (rect.top < window.innerHeight && rect.bottom > 0) {
+                const speed = 0.2;
+                video.style.transform = `translateY(${(rect.top * speed)}px)`;
+                scrollText.style.transform = `translateX(${(rect.top * 0.5)}px)`;
+            }
+        });
+
+        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('open'); }
+
+        function addToCart(id, type) {
+            const source = (type === 'e') ? eventData : itemData;
+            const item = source.find(x => x.id === id);
+            cart.push({...item, cartId: Date.now()});
+            renderCart();
+            if(!document.getElementById('cart-sidebar').classList.contains('open')) toggleCart();
+        }
+
+        function removeFromCart(cartId) {
+            cart = cart.filter(item => item.cartId !== cartId);
+            renderCart();
+        }
+
+        function renderCart() {
+            const list = document.getElementById('cart-list');
+            const count = document.getElementById('cart-count');
+            const total = document.getElementById('total-text');
+            list.innerHTML = cart.map(i => `
+                <div class="cart-item">
+                    <div>
+                        <p style="font-size:0.8rem; font-weight:700;">${i.n}</p>
+                        <p style="font-size:0.7rem; color:var(--rojo);">$${i.p}</p>
+                    </div>
+                    <button class="remove-btn" onclick="removeFromCart(${i.cartId})">ELIMINAR</button>
+                </div>
+            `).join('');
+            count.innerText = cart.length;
+            const sum = cart.reduce((a, b) => a + b.p, 0);
+            total.innerText = `Total: $${sum}`;
+        }
+
+        function openPaymentModal() {
+            if(cart.length === 0) return alert("El carrito está vacío");
+            document.getElementById('modal-payment').style.display = 'flex';
+        }
+
+        function closePaymentModal() { document.getElementById('modal-payment').style.display = 'none'; }
+
+        function processOrder(e) {
+            e.preventDefault();
+            alert("¡Transacción Exitosa! Revisa tu correo para el comprobante de inscripción.");
+            cart = [];
+            renderCart();
+            closePaymentModal();
+            toggleCart();
+        }
+
+        function toggleLogin() { document.getElementById('modal-login').style.display = (document.getElementById('modal-login').style.display === 'flex') ? 'none' : 'flex'; }
+        
+        function login() {
+            currentUser = { name: "Atleta Veracruz" };
+            document.getElementById('user-label').innerText = "HOLA, ATLETA";
+            document.getElementById('login-trigger').classList.add('logged-in');
+            toggleLogin();
+        }
+
+        function renderRanking() {
+            const data = [{p:"01", n:"Carlos R.", pts:2900}, {p:"02", n:"Elena M.", pts:2400}, {p:"03", n:"Luis H.", pts:2100}];
+            document.getElementById('leaderboard-box').innerHTML = data.map(r => `
+                <div class="rank-item">
+                    <span style="color:var(--rojo); font-weight:700">${r.p}</span>
+                    <span>${r.n}</span>
+                    <span style="text-align:right; color:var(--dorado)">${r.pts} PTS</span>
+                </div>
+            `).join('');
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+        init();
+    </script>
+</body>
+</html>

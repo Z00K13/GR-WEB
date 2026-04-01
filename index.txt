@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gran Retto | Eventos Deportivos México</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Roboto:wght@300;400;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rojo-principal: #cc0000;
+            --negro-puro: #0a0a0a;
+            --gris-oscuro: #1a1a1a;
+            --blanco: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--negro-puro);
+            color: var(--blanco);
+            overflow-x: hidden;
+        }
+
+        /* --- Header & Navegación --- */
+        header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            border-bottom: 2px solid var(--rojo-principal);
+        }
+
+        .logo {
+            font-family: 'Oswald', sans-serif;
+            font-weight: 900;
+            font-size: 1.8rem;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--rojo-principal);
+        }
+
+        /* --- Sección Hero (Fondo que subiste) --- */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('fondo gr2026.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 5rem;
+            line-height: 1;
+            text-transform: uppercase;
+            font-style: italic;
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 10px rgba(0,0,0,0.8);
+        }
+
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            max-width: 700px;
+        }
+
+        /* --- Botón Dinámico --- */
+        .btn-gr {
+            background: var(--rojo-principal);
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            font-weight: 900;
+            text-transform: uppercase;
+            clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+            transition: all 0.4s ease;
+            display: inline-block;
+        }
+
+        .btn-gr:hover {
+            transform: scale(1.1) skewX(-5deg);
+            background: white;
+            color: var(--rojo-principal);
+            box-shadow: 0 0 20px var(--rojo-principal);
+        }
+
+        /* --- Grid de Eventos --- */
+        .section-container {
+            padding: 80px 5%;
+        }
+
+        h2 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 3rem;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            border-left: 10px solid var(--rojo-principal);
+            padding-left: 20px;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--gris-oscuro);
+            border: 1px solid #333;
+            overflow: hidden;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .card:hover {
+            border-color: var(--rojo-principal);
+            transform: translateY(-10px);
+        }
+
+        .card-img {
+            height: 200px;
+            background: #444; /* Placeholder */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-tag {
+            background: var(--rojo-principal);
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* --- Ecommerce Simple --- */
+        .shop-preview {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .product-item {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            background: #111;
+            padding: 20px;
+        }
+
+        .product-item img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 50px 5%;
+            background: #000;
+            text-align: center;
+            border-top: 1px solid #222;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            nav { display: none; } /* En producción se usaría un menú hamburguesa */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">GRAN RETTO<span>»</span></div>
+        <nav>
+            <a href="#">Inicio</a>
+            <a href="#">Nosotros</a>
+            <a href="#">Eventos</a>
+            <a href="#">E-Shop</a>
+            <a href="#">Contacto</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>SUPERA TUS LÍMITES</h1>
+        <p>Organización profesional de triatlón, natación y carreras pedestres en todo México.</p>
+        <a href="#eventos" class="btn-gr">Ver Próximos Eventos</a>
+    </section>
+
+    <section id="eventos" class="section-container">
+        <h2>Próximos Eventos</h2>
+        <div class="events-grid">
+            <div class="card">
+                <div class="card-img" style="background: linear-gradient(45deg, #222, #444);">AGUAS ABIERTAS</div>
+                <div class="card-content">
+                    <span class="card-tag">NATACIÓN</span>
+                    <h3>Travesía Veracruz 2026</h3>
+                    <p>Fecha: 15 de Marzo, 2026</p>
+                    <br>
+                    <a href="#" style="color: var(--rojo-principal); font-weight: bold; text-decoration: none;">DETALLES →</a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img" style="background: linear-gradient(45deg, #222, #444);">TRIATLÓN</div>
+                <div class="card-content">
+                    <span class="card-tag">MULTIDEPORTE</span>
+                    <h3>Triatlón Maya Riviera</h3>
+                    <p>Fecha: 22 de Abril, 2026</p>
+                    <br>
+                    <a href="#" style="color: var(--rojo-principal); font-weight: bold; text-decoration: none;">DETALLES →</a>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-img" style="background: linear-gradient(45deg, #222, #444);">MEDIO MARATÓN</div>
+                <div class="card-content">
+                    <span class="card-tag">PEDESTRE</span>
+                    <h3>21K CDMX Gran Retto</h3>
+                    <p>Fecha: 10 de Mayo, 2026</p>
+                    <br>
+                    <a href="#" style="color: var(--rojo-principal); font-weight: bold; text-decoration: none;">DETALLES →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-container" style="background: #111;">
+        <h2>Tienda Oficial</h2>
+        <div class="shop-preview">
+            <div class="product-item">
+                <div style="height:150px; background:#222; margin-bottom:10px;"></div>
+                <h4>Gorra Natación Silicona</h4>
+                <p>$250.00 MXN</p>
+                <br>
+                <a href="#" class="btn-gr" style="padding: 8px 20px; font-size: 0.8rem;">Comprar</a>
+            </div>
+            <div class="product-item">
+                <div style="height:150px; background:#222; margin-bottom:10px;"></div>
+                <h4>Playera Dry-Fit Pro</h4>
+                <p>$450.00 MXN</p>
+                <br>
+                <a href="#" class="btn-gr" style="padding: 8px 20px; font-size: 0.8rem;">Comprar</a>
+            </div>
+            <div class="product-item">
+                <div style="height:150px; background:#222; margin-bottom:10px;"></div>
+                <h4>Toalla Microfibra GR</h4>
+                <p>$300.00 MXN</p>
+                <br>
+                <a href="#" class="btn-gr" style="padding: 8px 20px; font-size: 0.8rem;">Comprar</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Gran Retto México - Expertos en Organización Deportiva</p>
+    </footer>
+
+</body>
+</html>
