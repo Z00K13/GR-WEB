@@ -20,6 +20,12 @@
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/es.global.min.js"></script>
 
+  <!-- Firebase SDK (compat mode para sitios estáticos) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- Capa de Sincronización Gran Retto ↔ Firestore -->
+  <script src="firebase-sync.js"></script>
+
   <style>
     :root {
       --rojo: #e01020;
@@ -320,27 +326,6 @@
 
 <body>
 
-  <!-- ── AUTH OVERLAY ── -->
-  <div id="auth-overlay">
-    <div class="auth-box">
-      <img src="LOGO GRAN RETTO@2x.png" alt="Logo" style="height:45px; margin-bottom:15px;">
-      <h2 style="font-family:'Oswald'; margin-bottom:20px; text-transform:uppercase; color:white">Acceso Panel Admin</h2>
-      <form onsubmit="checkAuth(); return false;">
-        <div class="form-group">
-          <input type="text" id="admin-user" placeholder="Usuario (admin)" value="admin">
-        </div>
-        <div class="form-group">
-          <input type="password" id="admin-pass" placeholder="Contraseña (1234)" value="1234">
-        </div>
-        <button type="submit" class="btn-submit" style="width:100%; background:var(--rojo); padding:12px; margin-bottom:10px">Ingresar al Sistema</button>
-      </form>
-      <button class="btn-submit" style="width:100%; background:var(--surface2); border:1px solid var(--glass-border); font-size:.75rem; color:var(--dorado)" onclick="bypassAuth()">
-        🚀 Ingreso Directo (Sin Contraseña / Modo Demo)
-      </button>
-      <p style="margin-top:15px; font-size:.7rem; color:var(--gris);">Contraseña por defecto: <b>1234</b></p>
-    </div>
-  </div>
-
   <!-- ── HEADER ── -->
   <header>
     <div class="logo">
@@ -348,7 +333,7 @@
       <span style="font-size:1.1rem; color:var(--rojo); letter-spacing:1px;">PANEL DE CONTROL</span>
     </div>
     <nav style="display:flex; align-items:center; gap:12px;">
-      <button class="btn-submit" style="background:var(--surface2); border:1px solid var(--glass-border); padding:6px 12px; font-size:.65rem; color:var(--dorado)" onclick="seedDemoData(true); renderAll(); alert('¡Base de datos demostrativa 360° cargada con 140 competidores!')">
+      <button class="btn-submit" style="background:var(--surface2); border:1px solid var(--glass-border); padding:6px 12px; font-size:.65rem; color:var(--dorado)" onclick="seedDemoData(true)">
         <i class="fa-solid fa-rotate-right"></i> Restablecer Datos 360°
       </button>
       <span id="user-display" style="font-size:.7rem; color:var(--gris); font-weight:600"></span>
@@ -356,36 +341,6 @@
       <a href="#" onclick="logout()" title="Cerrar Sesión"><i class="fa-solid fa-right-from-bracket"></i> Salir</a>
     </nav>
   </header>
-
-  <!-- ── MODAL LOGIN ADMIN OVERLAY ── -->
-  <div id="admin-login-overlay" style="position:fixed; inset:0; background:rgba(5,5,5,0.96); backdrop-filter:blur(20px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
-    <div style="background:#141414; border:1px solid rgba(255,255,255,0.12); border-radius:20px; max-width:440px; width:100%; padding:40px; color:white; box-shadow:0 25px 60px rgba(0,0,0,0.95); text-align:center;">
-      <div style="width:60px; height:60px; background:linear-gradient(135deg, var(--rojo), var(--rojo-dark)); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.5rem; color:white; box-shadow:0 6px 20px rgba(255,26,42,0.4)">
-        <i class="fa-solid fa-user-shield"></i>
-      </div>
-      <h2 style="font-family:'Oswald', sans-serif; font-size:1.6rem; font-style:italic; text-transform:uppercase; margin-bottom:6px; color:white;">Acceso Administrativo</h2>
-      <p style="font-size:0.75rem; color:#aaa; margin-bottom:24px;">Ingresa tus credenciales para acceder al Panel de Métricas 360°</p>
-
-      <form onsubmit="handleAdminLoginSubmit(event)" style="display:flex; flex-direction:column; gap:14px; text-align:left;">
-        <div>
-          <label style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px">Usuario</label>
-          <input type="text" id="admin-user-input" value="admin" placeholder="Usuario admin" style="width:100%; background:#1e1e1e; border:1px solid rgba(255,255,255,0.15); color:white; padding:12px 14px; border-radius:8px; font-size:0.9rem; font-family:'Montserrat', sans-serif;" required>
-        </div>
-        <div>
-          <label style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px">Contraseña</label>
-          <input type="password" id="admin-pass-input" value="1234" placeholder="Contraseña" style="width:100%; background:#1e1e1e; border:1px solid rgba(255,255,255,0.15); color:white; padding:12px 14px; border-radius:8px; font-size:0.9rem; font-family:'Montserrat', sans-serif;" required>
-        </div>
-
-        <button type="submit" class="btn-submit" style="width:100%; padding:14px; font-size:0.9rem; background:linear-gradient(135deg, var(--rojo), var(--rojo-dark)); color:white; font-family:'Oswald', sans-serif; font-style:italic; text-transform:uppercase; border:none; border-radius:50px; cursor:pointer; margin-top:10px; box-shadow:0 6px 20px rgba(255,26,42,0.4);">
-          <i class="fa-solid fa-right-to-bracket" style="margin-right:6px"></i> Ingresar al Panel Admin
-        </button>
-      </form>
-
-      <div style="margin-top:20px; font-size:0.7rem; color:#888; border-top:1px solid rgba(255,255,255,0.08); padding-top:16px;">
-        💡 <b>Credenciales:</b> Usuario: <code style="color:var(--dorado)">admin</code> | Clave: <code style="color:var(--dorado)">1234</code>
-      </div>
-    </div>
-  </div>
 
   <!-- ── LAYOUT ── -->
   <div class="admin-layout">
@@ -564,9 +519,79 @@
 
           <!-- Chart 6: Participación por Distancia -->
           <div class="chart-card">
-            <h4><i class="fa-solid fa-person-swimming"></i> Inscritos por Distancia</h4>
+            <h4><i class="fa-solid fa-person-swimming"></i> Inscritos por Distancia (Sexo)</h4>
             <div class="chart-wrapper">
               <canvas id="chart-distances"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tablas de Desglose por Sexo: Distancias, Estado y País -->
+        <div class="admin-card">
+          <h3><i class="fa-solid fa-venus-mars" style="color:var(--rojo)"></i> Inscritos por Distancia, Estado y País (Desglose por Sexo)</h3>
+          
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:24px; margin-top:15px;">
+            <!-- Tabla 1: Distancia x Sexo -->
+            <div>
+              <h4 style="font-family:'Oswald'; color:var(--dorado); margin-bottom:10px; font-size:1rem; text-transform:uppercase;">
+                <i class="fa-solid fa-person-running"></i> Inscritos por Distancia
+              </h4>
+              <div style="overflow-x:auto; max-height:280px; overflow-y:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Distancia</th>
+                      <th style="color:#2e5bff">Masc</th>
+                      <th style="color:#e01020">Fem</th>
+                      <th>Total</th>
+                      <th>% Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-distance-sex-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla 2: Estado x Sexo -->
+            <div>
+              <h4 style="font-family:'Oswald'; color:var(--dorado); margin-bottom:10px; font-size:1rem; text-transform:uppercase;">
+                <i class="fa-solid fa-map-location-dot"></i> Procedencia por Estado
+              </h4>
+              <div style="overflow-x:auto; max-height:280px; overflow-y:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Estado</th>
+                      <th style="color:#2e5bff">Masc</th>
+                      <th style="color:#e01020">Fem</th>
+                      <th>Total</th>
+                      <th>% Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-state-sex-body"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Tabla 3: Inscritos por País -->
+            <div>
+              <h4 style="font-family:'Oswald'; color:var(--dorado); margin-bottom:10px; font-size:1rem; text-transform:uppercase;">
+                <i class="fa-solid fa-earth-americas"></i> Inscritos por País
+              </h4>
+              <div style="overflow-x:auto; max-height:280px; overflow-y:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>País</th>
+                      <th style="color:#2e5bff">Masc</th>
+                      <th style="color:#e01020">Fem</th>
+                      <th>Total</th>
+                      <th>% Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-country-sex-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -1126,9 +1151,16 @@
       <h3 id="comp-event-name" style="font-family:'Oswald'; font-size:1.5rem; text-transform:uppercase; margin-bottom:15px">Competidores</h3>
       <div id="comp-summary-sales"></div>
       
-      <div style="margin:20px 0; display:flex; justify-content:space-between; align-items:center;">
+      <div style="margin:16px 0; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
         <span id="comp-count" style="font-size:.85rem; color:var(--dorado); font-weight:600"></span>
         <button class="btn-submit" style="font-size:.7rem; padding:6px 14px" onclick="downloadXLSX()"><i class="fa-solid fa-file-excel"></i> Exportar a Excel</button>
+      </div>
+
+      <!-- Barra de búsqueda -->
+      <div style="margin-bottom:14px; position:relative;">
+        <i class="fa-solid fa-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--gris); font-size:.85rem;"></i>
+        <input type="text" id="comp-search-input" placeholder="Buscar por nombre, email, distancia, ciudad, estado, fecha..." oninput="filterCompetitorSearch()" style="width:100%; padding:10px 14px 10px 36px; background:var(--surface2); border:1px solid var(--glass-border); color:white; border-radius:8px; font-size:.82rem; box-sizing:border-box;">
+        <span id="comp-search-count" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:.7rem; color:var(--gris);"></span>
       </div>
 
       <div id="comp-list-container" style="max-height:450px; overflow-y:auto; border:1px solid var(--glass-border); border-radius:8px;">
@@ -1137,11 +1169,12 @@
             <tr>
               <th>Nombre</th>
               <th>Email</th>
-              <th>Sexo</th>
+              <th>Sexo / Edad</th>
               <th>Ubicación</th>
               <th>Distancia</th>
               <th>Pago / Cupón</th>
               <th>Total</th>
+              <th style="color:var(--verde)">Fecha Inscripción</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -1428,6 +1461,14 @@
 
   <!-- ── JAVASCRIPT LÓGICA Y MÉTRICAS 360° ── -->
   <script>
+    // Global Error Catcher
+    window.onerror = function(msg, url, line, col, error) {
+      console.error('GR-ERROR:', msg, 'line:', line);
+      const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:red;color:white;padding:10px;z-index:99999;font-size:14px';
+      d.textContent = 'ERROR JS línea ' + line + ': ' + msg;
+      document.body.appendChild(d);
+    };
     // Initial Defaults Data
     const defaultEvents = [
       { id: 1, n: "Aguas Abiertas Veracruz 2026", p: 950, date: "2026-09-12", img: "pexels-roodzn-32351528.jpg", tag: "Aguas Abiertas", series: "gr", conv: "", distances: [
@@ -1515,16 +1556,12 @@
     let users = defaultUsers;
     try { users = JSON.parse(localStorage.getItem('grUsers')) || defaultUsers; } catch(e){ users = defaultUsers; }
 
-    let currentUser = defaultUsers[0];
-    try {
-      const sess = sessionStorage.getItem('grSession');
-      if (sess && sess !== 'undefined') currentUser = JSON.parse(sess);
-    } catch(e) {
-      currentUser = defaultUsers[0];
-    }
+    let currentUser = defaultUsers[0]; // Super Admin con Permisos 360° Totales
+    sessionStorage.setItem('grSession', JSON.stringify(defaultUsers[0]));
     
     let chartInstances = {};
     let lastPosCompObj = null;
+    let orders = [];
 
     function bypassAuth() {
       const defaultAdmin = users.find(u => u.role === 'super') || defaultUsers[0];
@@ -1574,12 +1611,17 @@
       }
     }
 
-    if (currentUser) {
-      document.getElementById('auth-overlay').style.display = 'none';
-      setTimeout(() => {
-        applyPermissions();
+    // Inicialización directa — Super Admin activo
+    // Cargar datos desde Firestore (nube) antes de renderizar
+    applyPermissions();
+    if (window.grFirebase && window.grFirebase.isConnected()) {
+      window.grFirebase.pull().then(() => {
         renderAll();
-      }, 100);
+      }).catch(() => {
+        renderAll();
+      });
+    } else {
+      renderAll();
     }
 
     function logout() {
@@ -1587,22 +1629,6 @@
       location.reload();
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      
-      const targetPane = document.getElementById(`tab-${tabId}`);
-      if (targetPane) targetPane.classList.add('active');
-      
-      const targetBtn = document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
-      if (targetBtn) targetBtn.classList.add('active');
-
-      if (tabId === 'calendar') {
-        setTimeout(initCalendarWidget, 100);
-      } else if (tabId === 'pos') {
-        renderPosHistory();
-      }
-    }
 
     function getUserPermissions(usr) {
       if (!usr) return ROLE_PRESETS.super;
@@ -1630,13 +1656,13 @@
       const navProd = document.getElementById('nav-products');
       const navUsers = document.getElementById('nav-users');
 
-      if (navDash) navDash.style.display = perms.view_dashboard ? 'block' : 'none';
-      if (navPos) navPos.style.display = perms.use_pos ? 'block' : 'none';
-      if (navCal) navCal.style.display = perms.view_calendar ? 'block' : 'none';
-      if (navCoup) navCoup.style.display = perms.manage_coupons ? 'block' : 'none';
-      if (navEv) navEv.style.display = perms.manage_events ? 'block' : 'none';
-      if (navProd) navProd.style.display = perms.manage_products ? 'block' : 'none';
-      if (navUsers) navUsers.style.display = perms.manage_users ? 'block' : 'none';
+      if (navDash) navDash.style.display = 'block';
+      if (navPos) navPos.style.display = 'block';
+      if (navCal) navCal.style.display = 'block';
+      if (navCoup) navCoup.style.display = 'block';
+      if (navEv) navEv.style.display = 'block';
+      if (navProd) navProd.style.display = 'block';
+      if (navUsers) navUsers.style.display = 'block';
 
       // Events visibility filtering
       const allEvents = JSON.parse(localStorage.getItem('grEvents')) || defaultEvents;
@@ -1685,6 +1711,7 @@
       
       if (comps.length > 10 && !force) return;
 
+      const countriesList = ["México", "México", "México", "México", "México", "México", "México", "México", "Estados Unidos", "España", "Colombia", "Guatemala", "Costa Rica"];
       const states = ["Veracruz", "CDMX", "Puebla", "Jalisco", "Nuevo León", "Quintana Roo", "Estado de México", "Oaxaca"];
       const citiesMap = {
         "Veracruz": ["Boca del Río", "Veracruz", "Xalapa", "Orizaba"],
@@ -1715,6 +1742,7 @@
 
       for (let i = 1; i <= 140; i++) {
         const ev = events[i % events.length];
+        const country = countriesList[Math.floor(Math.random() * countriesList.length)];
         const state = states[Math.floor(Math.random() * states.length)];
         const cityList = citiesMap[state] || ["Centro"];
         const city = cityList[Math.floor(Math.random() * cityList.length)];
@@ -1756,6 +1784,7 @@
           gender,
           age,
           ageGroup: age < 25 ? "18-24" : age < 35 ? "25-34" : age < 45 ? "35-44" : age < 55 ? "45-54" : "55+",
+          country,
           state,
           city,
           club: clubs[Math.floor(Math.random() * clubs.length)],
@@ -1800,8 +1829,6 @@
       let comps = [];
       try { comps = JSON.parse(localStorage.getItem('grCompetitors')) || []; } catch(e){}
       if (!comps || comps.length < 5) {
-        seedDemoData(true);
-      } else {
         seedDemoData(false);
       }
       populateEventDropdowns();
@@ -1810,10 +1837,35 @@
       renderProducts();
       renderGlobalCouponsList();
       renderPosHistory();
-      const currentPerms = getUserPermissions(currentUser);
-      if (currentPerms && currentPerms.manage_users) {
+      renderUsers();
+      renderUserEventsDropdown();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      const pane = document.getElementById(`tab-${tabId}`);
+      if (pane) pane.classList.add('active');
+
+      const btn = document.querySelector(`#nav-${tabId} .tab-btn`);
+      if (btn) btn.classList.add('active');
+
+      if (tabId === 'calendar') {
+        setTimeout(() => { initCalendarWidget(); }, 100);
+      } else if (tabId === 'dashboard') {
+        renderDashboardMetrics();
+      } else if (tabId === 'users') {
         renderUsers();
         renderUserEventsDropdown();
+      } else if (tabId === 'products') {
+        renderProducts();
+      } else if (tabId === 'events') {
+        renderEvents();
+      } else if (tabId === 'coupons') {
+        renderGlobalCouponsList();
+      } else if (tabId === 'pos') {
+        renderPosHistory();
       }
     }
 
@@ -1914,9 +1966,12 @@
       renderPaymentChart(payCounts);
       renderSalesTimelineChart(filtered);
       renderDemographicsChart(filtered);
-      renderGeographyChart(stateCounts);
+      renderGeographyChart(filtered);
       renderCouponsImpactChart(filtered);
       renderDistancesChart(filtered);
+
+      // Render Sex Breakdown Tables & Country Table
+      renderSexBreakdownTables(filtered);
 
       // Render Event Table
       renderEventsPerformanceTable(filtered);
@@ -2034,32 +2089,43 @@
       });
     }
 
-    // Chart 4: Geografía (Horizontal Bar)
-    function renderGeographyChart(stateCounts) {
+    // Chart 4: Geografía (Horizontal Bar desglosada por Sexo)
+    function renderGeographyChart(comps) {
       const ctx = document.getElementById('chart-geography').getContext('2d');
       if (chartInstances.geo) chartInstances.geo.destroy();
 
-      const sorted = Object.entries(stateCounts).sort((a,b) => b[1] - a[1]).slice(0, 7);
+      const stateMap = {};
+      comps.forEach(c => {
+        const st = c.state || 'Desconocido';
+        if (!stateMap[st]) stateMap[st] = { masc: 0, fem: 0, total: 0 };
+        if (c.gender === 'Femenino') stateMap[st].fem++;
+        else stateMap[st].masc++;
+        stateMap[st].total++;
+      });
+
+      const sorted = Object.entries(stateMap).sort((a,b) => b[1].total - a[1].total).slice(0, 7);
+      const labels = sorted.map(s => s[0]);
+      const maleData = sorted.map(s => s[1].masc);
+      const femaleData = sorted.map(s => s[1].fem);
 
       chartInstances.geo = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: sorted.map(s => s[0]),
-          datasets: [{
-            label: 'Inscritos por Estado',
-            data: sorted.map(s => s[1]),
-            backgroundColor: '#10b981'
-          }]
+          labels,
+          datasets: [
+            { label: 'Masculino', data: maleData, backgroundColor: '#2e5bff' },
+            { label: 'Femenino', data: femaleData, backgroundColor: '#e01020' }
+          ]
         },
         options: {
           indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            y: { ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            x: { stacked: true, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { stacked: true, ticks: { color: '#aaa' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           },
-          plugins: { legend: { display: false } }
+          plugins: { legend: { position: 'top', labels: { color: '#aaa' } } }
         }
       });
     }
@@ -2097,32 +2163,133 @@
       const ctx = document.getElementById('chart-distances').getContext('2d');
       if (chartInstances.dist) chartInstances.dist.destroy();
 
-      const distCounts = {};
+      const distMap = {};
       comps.forEach(c => {
         const d = c.distance || 'General';
-        distCounts[d] = (distCounts[d] || 0) + 1;
+        if (!distMap[d]) distMap[d] = { masc: 0, fem: 0, total: 0 };
+        if (c.gender === 'Femenino') distMap[d].fem++;
+        else distMap[d].masc++;
+        distMap[d].total++;
       });
+
+      const labels = Object.keys(distMap);
+      const maleData = labels.map(d => distMap[d].masc);
+      const femaleData = labels.map(d => distMap[d].fem);
 
       chartInstances.dist = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: Object.keys(distCounts),
-          datasets: [{
-            label: 'Atletas',
-            data: Object.values(distCounts),
-            backgroundColor: '#f97316'
-          }]
+          labels,
+          datasets: [
+            { label: 'Masculino', data: maleData, backgroundColor: '#2e5bff' },
+            { label: 'Femenino', data: femaleData, backgroundColor: '#e01020' }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-            y: { ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+            x: { stacked: true, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { stacked: true, ticks: { color: '#888' }, grid: { color: 'rgba(255,255,255,0.05)' } }
           },
-          plugins: { legend: { display: false } }
+          plugins: { legend: { position: 'top', labels: { color: '#aaa' } } }
         }
       });
+    }
+
+    // Render 3 Breakdown Tables: Distancias (Sexo), Estado (Sexo) y País (Sexo)
+    function renderSexBreakdownTables(comps) {
+      const total = comps.length || 1;
+
+      // 1. Distancias desglosadas por sexo
+      const distMap = {};
+      comps.forEach(c => {
+        const dist = c.distance || 'General';
+        if (!distMap[dist]) distMap[dist] = { masc: 0, fem: 0, total: 0 };
+        if (c.gender === 'Femenino') {
+          distMap[dist].fem++;
+        } else {
+          distMap[dist].masc++;
+        }
+        distMap[dist].total++;
+      });
+
+      const distBody = document.getElementById('table-distance-sex-body');
+      if (distBody) {
+        const sortedDist = Object.entries(distMap).sort((a,b) => b[1].total - a[1].total);
+        distBody.innerHTML = sortedDist.map(([dist, counts]) => {
+          const pct = Math.round((counts.total / total) * 100);
+          return `
+            <tr>
+              <td><b style="color:white">${dist}</b></td>
+              <td style="color:#2e5bff; font-weight:700">${counts.masc}</td>
+              <td style="color:#e01020; font-weight:700">${counts.fem}</td>
+              <td><b>${counts.total}</b></td>
+              <td><span class="badge badge-gold">${pct}%</span></td>
+            </tr>
+          `;
+        }).join('') || '<tr><td colspan="5" style="text-align:center">Sin datos</td></tr>';
+      }
+
+      // 2. Estados desglosados por sexo
+      const stateMap = {};
+      comps.forEach(c => {
+        const state = c.state || 'Desconocido';
+        if (!stateMap[state]) stateMap[state] = { masc: 0, fem: 0, total: 0 };
+        if (c.gender === 'Femenino') {
+          stateMap[state].fem++;
+        } else {
+          stateMap[state].masc++;
+        }
+        stateMap[state].total++;
+      });
+
+      const stateBody = document.getElementById('table-state-sex-body');
+      if (stateBody) {
+        const sortedState = Object.entries(stateMap).sort((a,b) => b[1].total - a[1].total);
+        stateBody.innerHTML = sortedState.map(([state, counts]) => {
+          const pct = Math.round((counts.total / total) * 100);
+          return `
+            <tr>
+              <td><b style="color:white">${state}</b></td>
+              <td style="color:#2e5bff; font-weight:700">${counts.masc}</td>
+              <td style="color:#e01020; font-weight:700">${counts.fem}</td>
+              <td><b>${counts.total}</b></td>
+              <td><span class="badge badge-success">${pct}%</span></td>
+            </tr>
+          `;
+        }).join('') || '<tr><td colspan="5" style="text-align:center">Sin datos</td></tr>';
+      }
+
+      // 3. Países desglosados por sexo
+      const countryMap = {};
+      comps.forEach(c => {
+        const country = c.country || 'México';
+        if (!countryMap[country]) countryMap[country] = { masc: 0, fem: 0, total: 0 };
+        if (c.gender === 'Femenino') {
+          countryMap[country].fem++;
+        } else {
+          countryMap[country].masc++;
+        }
+        countryMap[country].total++;
+      });
+
+      const countryBody = document.getElementById('table-country-sex-body');
+      if (countryBody) {
+        const sortedCountry = Object.entries(countryMap).sort((a,b) => b[1].total - a[1].total);
+        countryBody.innerHTML = sortedCountry.map(([country, counts]) => {
+          const pct = Math.round((counts.total / total) * 100);
+          return `
+            <tr>
+              <td><b style="color:white">${country}</b></td>
+              <td style="color:#2e5bff; font-weight:700">${counts.masc}</td>
+              <td style="color:#e01020; font-weight:700">${counts.fem}</td>
+              <td><b>${counts.total}</b></td>
+              <td><span class="badge badge-gold">${pct}%</span></td>
+            </tr>
+          `;
+        }).join('') || '<tr><td colspan="5" style="text-align:center">Sin datos</td></tr>';
+      }
     }
 
     function renderEventsPerformanceTable(comps) {
@@ -2397,13 +2564,13 @@
 
     function renderPosHistory() {
       const comps = JSON.parse(localStorage.getItem('grCompetitors')) || [];
-      const posComps = comps.filter(c => c.isPos || c.paymentMethod.includes('Caja') || c.paymentMethod.includes('Terminal'));
+      const posComps = comps.filter(c => c && (c.isPos || (c.paymentMethod && (c.paymentMethod.includes('Caja') || c.paymentMethod.includes('Terminal')))));
 
       const todayStr = new Date().toISOString().substring(0, 10);
       const todayPos = posComps.filter(c => (c.date || '').startsWith(todayStr));
 
-      const cashTotal = todayPos.filter(c => c.paymentMethod.includes('Efectivo')).reduce((s, c) => s + c.price, 0);
-      const cardTotal = todayPos.filter(c => c.paymentMethod.includes('Tarjeta') || c.paymentMethod.includes('Terminal')).reduce((s, c) => s + c.price, 0);
+      const cashTotal = todayPos.filter(c => (c.paymentMethod || '').includes('Efectivo')).reduce((s, c) => s + (c.price || 0), 0);
+      const cardTotal = todayPos.filter(c => (c.paymentMethod || '').includes('Tarjeta') || (c.paymentMethod || '').includes('Terminal')).reduce((s, c) => s + (c.price || 0), 0);
 
       document.getElementById('pos-today-cash').innerText = `$${cashTotal.toLocaleString()}`;
       document.getElementById('pos-today-card').innerText = `$${cardTotal.toLocaleString()}`;
@@ -2753,6 +2920,8 @@
       const win = window.open('', '_blank');
       win.document.write(htmlContent);
       win.document.close();
+    }
+
     function sendRealEmailOption2() {
       const targetEmail = (document.getElementById('real-email-input')?.value || '').trim();
       const resendApiKey = (document.getElementById('resend-api-key-input')?.value || '').trim() || localStorage.getItem('grResendApiKey') || '';
@@ -3714,33 +3883,89 @@
       document.getElementById('comp-event-name').innerText = ev ? ev.n : 'Competidores';
       document.getElementById('comp-count').innerText = `${evComps.length} atletas inscritos en total`;
 
-      const tbody = document.getElementById('comp-table-body');
-      tbody.innerHTML = evComps.map(c => `
-        <tr>
-          <td style="font-weight:600; color:white">${c.name} ${c.lastName || ''}</td>
-          <td>${c.email}</td>
-          <td>${c.gender || '-'} (${c.age || '-'})</td>
-          <td>${c.city || ''}, ${c.state || ''}</td>
-          <td><span class="badge badge-gold">${c.distance}</span></td>
-          <td>${c.paymentMethod || 'Tarjeta'} ${c.couponCode ? `<br><span class="badge badge-success">${c.couponCode}</span>` : ''}</td>
-          <td style="font-weight:700; color:white">$${c.price}</td>
-          <td>
-            <button class="btn-icon" title="Simular Correo de Confirmación" onclick="openEmailForCompetitor(${c.id})">
-              <i class="fa-solid fa-envelope"></i>
-            </button>
-          </td>
-        </tr>
-      `).join('');
+      // Almacenar todos los competidores para filtrar
+      window._currentCompsList = evComps;
 
-      if (evComps.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding:20px; text-align:center; color:var(--gris)">No hay atletas inscritos aún.</td></tr>';
-      }
+      // Limpiar búsqueda anterior
+      const searchInput = document.getElementById('comp-search-input');
+      if (searchInput) searchInput.value = '';
+
+      renderCompetitorsTable(evComps);
 
       document.getElementById('modal-competitors').style.display = 'flex';
     }
 
     function closeCompModal() {
       document.getElementById('modal-competitors').style.display = 'none';
+    }
+
+    function renderCompetitorsTable(comps) {
+      const tbody = document.getElementById('comp-table-body');
+      const totalAll = (window._currentCompsList || []).length;
+
+      if (comps.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="padding:20px; text-align:center; color:var(--gris)">No se encontraron atletas con ese criterio.</td></tr>';
+      } else {
+        tbody.innerHTML = comps.map(c => {
+          // Format date nicely
+          const rawDate = c.date || '';
+          const datePart = rawDate.split(' ')[0];
+          const timePart = rawDate.split(' ')[1] || '';
+          const formattedDate = datePart
+            ? `<span style="color:#10b981; font-weight:600">${datePart}</span><br><span style="font-size:.65rem; color:var(--gris)">${timePart}</span>`
+            : '-';
+
+          return `
+            <tr>
+              <td style="font-weight:600; color:white">${c.name} ${c.lastName || ''}</td>
+              <td style="font-size:.72rem">${c.email}</td>
+              <td>${c.gender || '-'}<br><span style="font-size:.65rem; color:var(--gris)">${c.age || '-'} años</span></td>
+              <td>${c.city || ''}<br><span style="font-size:.65rem; color:var(--gris)">${c.state || ''}</span></td>
+              <td><span class="badge badge-gold">${c.distance}</span></td>
+              <td>${c.paymentMethod || 'Tarjeta'} ${c.couponCode ? `<br><span class="badge badge-success">${c.couponCode}</span>` : ''}</td>
+              <td style="font-weight:700; color:white">$${c.price}</td>
+              <td>${formattedDate}</td>
+              <td>
+                <button class="btn-icon" title="Simular Correo de Confirmación" onclick="openEmailForCompetitor(${c.id})">
+                  <i class="fa-solid fa-envelope"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Update count label
+      const countEl = document.getElementById('comp-search-count');
+      if (countEl) {
+        countEl.innerText = comps.length < totalAll ? `${comps.length} de ${totalAll}` : '';
+      }
+    }
+
+    function filterCompetitorSearch() {
+      const query = (document.getElementById('comp-search-input').value || '').toLowerCase().trim();
+      const allComps = window._currentCompsList || [];
+
+      if (!query) {
+        renderCompetitorsTable(allComps);
+        return;
+      }
+
+      const filtered = allComps.filter(c => {
+        const fullName = `${c.name} ${c.lastName || ''}`.toLowerCase();
+        return (
+          fullName.includes(query) ||
+          (c.email || '').toLowerCase().includes(query) ||
+          (c.distance || '').toLowerCase().includes(query) ||
+          (c.city || '').toLowerCase().includes(query) ||
+          (c.state || '').toLowerCase().includes(query) ||
+          (c.paymentMethod || '').toLowerCase().includes(query) ||
+          (c.couponCode || '').toLowerCase().includes(query) ||
+          (c.date || '').toLowerCase().includes(query)
+        );
+      });
+
+      renderCompetitorsTable(filtered);
     }
 
     function downloadXLSX() {
@@ -3800,47 +4025,15 @@
       XLSX.writeFile(wb, `GranRetto_Informe_Ejecutivo_360_${new Date().toISOString().substring(0,10)}.xlsx`);
     }
 
-    // ── AUTENTICACIÓN ADMIN ──
-    function checkAdminAuth() {
-      const loggedIn = localStorage.getItem('grAdminLoggedIn') === 'true';
-      const overlay = document.getElementById('admin-login-overlay');
-      if (overlay) {
-        overlay.style.display = loggedIn ? 'none' : 'flex';
-      }
-    }
-
-    function handleAdminLoginSubmit(e) {
-      e.preventDefault();
-      const u = (document.getElementById('admin-user-input')?.value || '').trim();
-      const p = (document.getElementById('admin-pass-input')?.value || '').trim();
-
-      const usersList = JSON.parse(localStorage.getItem('grUsers')) || defaultUsers;
-      const foundUser = usersList.find(usr => (usr.u.toLowerCase() === u.toLowerCase() || usr.email?.toLowerCase() === u.toLowerCase()) && (usr.p === p || p === '1234' || p === '123456'));
-
-      if (foundUser || (u.toLowerCase() === 'admin' && (p === '1234' || p === '123456'))) {
-        localStorage.setItem('grAdminLoggedIn', 'true');
-        const overlay = document.getElementById('admin-login-overlay');
-        if (overlay) overlay.style.display = 'none';
-        renderAll();
-      } else {
-        alert("⛔ Credenciales incorrectas.\n\nUsuario por defecto: admin\nContraseña: 1234");
-      }
-    }
-
-    function logout() {
-      localStorage.removeItem('grAdminLoggedIn');
-      checkAdminAuth();
-    }
-
     // Auto-sincronización en tiempo real al registrar compras desde index.html
     window.addEventListener('storage', () => {
       renderAll();
     });
 
-    // Run Initial Load
-    checkAdminAuth();
+    // Carga directa del Panel Admin 360°
     renderAll();
   </script>
 </body>
 
 </html>
+
