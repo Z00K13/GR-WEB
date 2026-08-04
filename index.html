@@ -15,6 +15,11 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- SDK de Mercado Pago JS v2 -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <!-- Capa de Sincronización Gran Retto ↔ Firestore -->
+  <script src="firebase-sync.js"></script>
   <style>
     :root {
       --rojo: #ff1a2a;
@@ -2462,6 +2467,17 @@
 
     /* ── INIT ── */
     function init() {
+      // Recargar datos desde Firebase si está disponible
+      if (window.grFirebase && window.grFirebase.isConnected()) {
+        window.grFirebase.pull().then(() => {
+          // Refrescar datos tras sincronizar
+          eventData = JSON.parse(localStorage.getItem('grEvents')) || defaultEventData;
+          itemData = JSON.parse(localStorage.getItem('grProducts')) || defaultItemData;
+          renderEvents();
+          renderShop(itemData);
+        }).catch(() => {});
+      }
+
       renderEvents();
       renderShop(itemData);
       renderCart();
@@ -2853,15 +2869,22 @@
 
         if (item.id < 20) { // Event
           competitors.push({
+            id: Date.now() + Math.floor(Math.random() * 1000),
             orderId: orderId,
             date: nowStr,
-            name: formData.get('Nombre'),
-            lastName: formData.get('Apellidos'),
-            email: formData.get('Email'),
-            club: formData.get('Club'),
+            timestamp: Date.now(),
+            name: formData.get('Nombre') || 'Atleta',
+            lastName: formData.get('Apellidos') || '',
+            email: formData.get('Email') || '',
+            club: formData.get('Club') || '',
             eventId: item.id,
             eventName: item.n,
             distance: item.dist || 'General',
+            gender: 'Masculino',
+            state: 'Veracruz',
+            city: 'Veracruz',
+            country: 'México',
+            paymentMethod: 'Tarjeta (Mercado Pago)',
             price: finalPrice
           });
         }
@@ -3077,11 +3100,19 @@
       const password = document.getElementById('auth-password').value.trim();
       const name = document.getElementById('auth-name').value.trim() || email.split('@')[0];
 
-      if (!email) return alert("Por favor ingresa un correo electrónico.");
+      if (!email) return alert("Por favor ingresa un usuario o correo electrónico.");
+
+      // Redirección especial para Administrador (usuario: admin, clave: 1234)
+      if (email.toLowerCase() === 'admin' || email.toLowerCase() === 'admin@granretto.com' || (email.toLowerCase().includes('admin') && (password === '1234' || password === '123456'))) {
+        localStorage.setItem('grAdminLoggedIn', 'true');
+        alert("🔑 ¡Acceso concedido como Super Administrador Gran Retto!\nRedirigiendo al Panel de Administración...");
+        window.location.href = 'admin.html';
+        return;
+      }
 
       const userObj = {
         name: name,
-        email: email,
+        email: email.includes('@') ? email : `${email}@gmail.com`,
         phone: "2291234567",
         club: "Gran Retto Team",
         emergency: "Contacto Emergencia",
