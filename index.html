@@ -2863,7 +2863,7 @@
       if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
           window.google.accounts.id.initialize({
-            client_id: "987654321000-demo.apps.googleusercontent.com",
+            client_id: "914134921568-9tvvqeohnfuvd6r0ka4k92scaog5i1mj.apps.googleusercontent.com",
             callback: onGoogleCredentialResponse,
             auto_prompt: false
           });
@@ -2873,8 +2873,10 @@
 
     function initMercadoPagoSDK() {
       try {
+        const mpPublicKey = 'TEST-9a8bcd80-eab9-4a38-873a-5c79b339c5b1';
+        localStorage.setItem('grMpPublicKey', mpPublicKey);
+        localStorage.setItem('grMpAccessToken', 'TEST-8866073752283352-080409-6bd69512522ecf5763e96d2f908dab64-2095736561');
         if (window.MercadoPago) {
-          const mpPublicKey = localStorage.getItem('grMpPublicKey') || 'TEST-8866073752283352';
           window.mp = new MercadoPago(mpPublicKey, { locale: 'es-MX' });
         }
       } catch(err) {}
@@ -2901,51 +2903,72 @@
     }
 
     function handleGoogleSignInClick() {
-      const googleUser = {
-        name: "Carlos Mendoza",
-        email: "carlos.mendoza@gmail.com",
-        picture: "https://lh3.googleusercontent.com/a/ACg8ocIq9xR...",
-        provider: "google",
-        phone: "2299112233",
-        club: "Tritones Veracruz",
-        emergency: "María Mendoza (2299887766)",
-        size: "M"
-      };
-
+      // Si hay un Client ID de Google configurado o disponible en el SDK
       if (window.google && window.google.accounts && window.google.accounts.id) {
         try {
           window.google.accounts.id.prompt((notification) => {
             if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-              loginAsUser(googleUser);
+              promptCustomGoogleEmail();
             }
           });
-        } catch(err) {
-          loginAsUser(googleUser);
-        }
-      } else {
-        loginAsUser(googleUser);
+          return;
+        } catch(err) {}
       }
+      promptCustomGoogleEmail();
+    }
+
+    function promptCustomGoogleEmail() {
+      const emailInput = (document.getElementById('auth-email')?.value || '').trim();
+      let email = emailInput;
+      
+      if (!email) {
+        email = prompt("Ingresa tu correo de Google (ej: tu.correo@gmail.com):", "atleta.nuevo@gmail.com");
+      }
+      
+      if (!email || !email.includes('@')) return;
+
+      const nameFromEmail = email.split('@')[0].replace(/[._-]/g, ' ');
+      const formattedName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
+
+      const customUser = {
+        name: formattedName,
+        email: email,
+        picture: `https://ui-avatars.com/api/?name=${encodeURIComponent(formattedName)}&background=ff1a2a&color=fff`,
+        provider: "google",
+        phone: "2299112233",
+        club: "Atletas Gran Retto",
+        emergency: "Contacto de Emergencia",
+        size: "M"
+      };
+
+      loginAsUser(customUser);
     }
 
     function onGoogleCredentialResponse(response) {
-      let userObj = {
-        name: "Carlos Mendoza",
-        email: "carlos.mendoza@gmail.com",
-        provider: "google",
-        club: "Veracruz Club"
-      };
       if (response && response.credential) {
         try {
           const base64Url = response.credential.split('.')[1];
           const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
           const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
           const parsed = JSON.parse(jsonPayload);
-          userObj.name = parsed.name || userObj.name;
-          userObj.email = parsed.email || userObj.email;
-          userObj.picture = parsed.picture;
-        } catch(e){}
+          
+          const realUser = {
+            name: parsed.name || parsed.email.split('@')[0],
+            email: parsed.email,
+            picture: parsed.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(parsed.name || 'Atleta')}&background=ff1a2a&color=fff`,
+            provider: "google",
+            phone: "2299112233",
+            club: "Atletas Gran Retto",
+            emergency: "Contacto de Emergencia",
+            size: "M"
+          };
+          loginAsUser(realUser);
+          return;
+        } catch(e){
+          console.error("Error decodificando token de Google", e);
+        }
       }
-      loginAsUser(userObj);
+      promptCustomGoogleEmail();
     }
 
     function toggleAuthMode(e) {
