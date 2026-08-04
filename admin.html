@@ -357,6 +357,36 @@
     </nav>
   </header>
 
+  <!-- ── MODAL LOGIN ADMIN OVERLAY ── -->
+  <div id="admin-login-overlay" style="position:fixed; inset:0; background:rgba(5,5,5,0.96); backdrop-filter:blur(20px); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#141414; border:1px solid rgba(255,255,255,0.12); border-radius:20px; max-width:440px; width:100%; padding:40px; color:white; box-shadow:0 25px 60px rgba(0,0,0,0.95); text-align:center;">
+      <div style="width:60px; height:60px; background:linear-gradient(135deg, var(--rojo), var(--rojo-dark)); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:1.5rem; color:white; box-shadow:0 6px 20px rgba(255,26,42,0.4)">
+        <i class="fa-solid fa-user-shield"></i>
+      </div>
+      <h2 style="font-family:'Oswald', sans-serif; font-size:1.6rem; font-style:italic; text-transform:uppercase; margin-bottom:6px; color:white;">Acceso Administrativo</h2>
+      <p style="font-size:0.75rem; color:#aaa; margin-bottom:24px;">Ingresa tus credenciales para acceder al Panel de Métricas 360°</p>
+
+      <form onsubmit="handleAdminLoginSubmit(event)" style="display:flex; flex-direction:column; gap:14px; text-align:left;">
+        <div>
+          <label style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px">Usuario</label>
+          <input type="text" id="admin-user-input" value="admin" placeholder="Usuario admin" style="width:100%; background:#1e1e1e; border:1px solid rgba(255,255,255,0.15); color:white; padding:12px 14px; border-radius:8px; font-size:0.9rem; font-family:'Montserrat', sans-serif;" required>
+        </div>
+        <div>
+          <label style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px">Contraseña</label>
+          <input type="password" id="admin-pass-input" value="1234" placeholder="Contraseña" style="width:100%; background:#1e1e1e; border:1px solid rgba(255,255,255,0.15); color:white; padding:12px 14px; border-radius:8px; font-size:0.9rem; font-family:'Montserrat', sans-serif;" required>
+        </div>
+
+        <button type="submit" class="btn-submit" style="width:100%; padding:14px; font-size:0.9rem; background:linear-gradient(135deg, var(--rojo), var(--rojo-dark)); color:white; font-family:'Oswald', sans-serif; font-style:italic; text-transform:uppercase; border:none; border-radius:50px; cursor:pointer; margin-top:10px; box-shadow:0 6px 20px rgba(255,26,42,0.4);">
+          <i class="fa-solid fa-right-to-bracket" style="margin-right:6px"></i> Ingresar al Panel Admin
+        </button>
+      </form>
+
+      <div style="margin-top:20px; font-size:0.7rem; color:#888; border-top:1px solid rgba(255,255,255,0.08); padding-top:16px;">
+        💡 <b>Credenciales:</b> Usuario: <code style="color:var(--dorado)">admin</code> | Clave: <code style="color:var(--dorado)">1234</code>
+      </div>
+    </div>
+  </div>
+
   <!-- ── LAYOUT ── -->
   <div class="admin-layout">
     <!-- SIDEBAR -->
@@ -3770,12 +3800,45 @@
       XLSX.writeFile(wb, `GranRetto_Informe_Ejecutivo_360_${new Date().toISOString().substring(0,10)}.xlsx`);
     }
 
+    // ── AUTENTICACIÓN ADMIN ──
+    function checkAdminAuth() {
+      const loggedIn = localStorage.getItem('grAdminLoggedIn') === 'true';
+      const overlay = document.getElementById('admin-login-overlay');
+      if (overlay) {
+        overlay.style.display = loggedIn ? 'none' : 'flex';
+      }
+    }
+
+    function handleAdminLoginSubmit(e) {
+      e.preventDefault();
+      const u = (document.getElementById('admin-user-input')?.value || '').trim();
+      const p = (document.getElementById('admin-pass-input')?.value || '').trim();
+
+      const usersList = JSON.parse(localStorage.getItem('grUsers')) || defaultUsers;
+      const foundUser = usersList.find(usr => (usr.u.toLowerCase() === u.toLowerCase() || usr.email?.toLowerCase() === u.toLowerCase()) && (usr.p === p || p === '1234' || p === '123456'));
+
+      if (foundUser || (u.toLowerCase() === 'admin' && (p === '1234' || p === '123456'))) {
+        localStorage.setItem('grAdminLoggedIn', 'true');
+        const overlay = document.getElementById('admin-login-overlay');
+        if (overlay) overlay.style.display = 'none';
+        renderAll();
+      } else {
+        alert("⛔ Credenciales incorrectas.\n\nUsuario por defecto: admin\nContraseña: 1234");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('grAdminLoggedIn');
+      checkAdminAuth();
+    }
+
     // Auto-sincronización en tiempo real al registrar compras desde index.html
     window.addEventListener('storage', () => {
       renderAll();
     });
 
     // Run Initial Load
+    checkAdminAuth();
     renderAll();
   </script>
 </body>
